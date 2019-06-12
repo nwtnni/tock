@@ -8,3 +8,8 @@ edition = "2018"
 termion = "1.5.2"
 chrono = "0.4.6"
 structopt = "0.2.16"
+
+[profile.release]
+opt-level = 'z'
+lto = true
+panic = 'abort'

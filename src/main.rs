@@ -1,6 +1,7 @@
 use std::error;
 use std::io;
 use std::io::Write;
+use std::alloc;
 
 use termion::clear;
 use termion::color;
@@ -9,6 +10,9 @@ use termion::raw::IntoRawMode;
 
 mod time;
 mod view;
+
+#[global_allocator]
+static A: alloc::System = alloc::System;
 
 fn main() -> Result<(), Box<dyn error::Error>> {
     let sleep = std::time::Duration::from_secs(1);
