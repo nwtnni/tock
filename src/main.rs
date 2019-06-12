@@ -1,6 +1,6 @@
 use std::error;
 
-mod data;
+mod time;
 mod view;
 
 fn main() -> Result<(), Box<dyn error::Error>> {
