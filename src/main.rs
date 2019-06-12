@@ -1,14 +1,38 @@
 use std::error;
+use std::io;
+use std::io::Write;
+
+use termion::clear;
+use termion::color;
+use termion::cursor;
+use termion::raw::IntoRawMode;
 
 mod time;
 mod view;
 
 fn main() -> Result<(), Box<dyn error::Error>> {
     let sleep = std::time::Duration::from_secs(1);
-    loop {
+
+    let mut stdout = io::stdout().into_raw_mode().unwrap();
+    let mut clock = view::Clock::default();
+
+    stdout.activate_raw_mode()?;
+
+    write!(&mut stdout, "{}{}", clear::All, cursor::Hide)?;
+
+    for _ in 0..10 {
+        clock.tick(&mut stdout)?;
         std::thread::sleep(sleep);
-        println!("{:?}", chrono::Local::now());
     }
+
+    write!(
+        &mut stdout,
+        "{}{}{}{}",
+        color::Bg(color::Reset),
+        clear::All,
+        cursor::Show,
+        cursor::Goto(1, 1),
+    )?;
 
     Ok(())
 }
