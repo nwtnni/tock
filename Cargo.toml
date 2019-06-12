@@ -1,0 +1,10 @@
+[package]
+name = "tick"
+version = "0.1.0"
+authors = ["Newton Ni <nwtnni@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+termion = "1.5.2"
+chrono = "0.4.6"
+structopt = "0.2.16"
