@@ -1,9 +1,14 @@
-mod data;
+use std::error;
 
-fn main() {
+mod data;
+mod view;
+
+fn main() -> Result<(), Box<dyn error::Error>> {
     let sleep = std::time::Duration::from_secs(1);
     loop {
         std::thread::sleep(sleep);
         println!("{:?}", chrono::Local::now());
     }
+
+    Ok(())
 }
