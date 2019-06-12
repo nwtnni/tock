@@ -54,6 +54,22 @@ impl Clock {
             }
         }
 
+        let w = (self.w * 4 << 3) - 1;
+        let h = self.h * 5;
+
+        let x = w / 2 - (4 + 1 + 2 + 1 + 2) / 2 + self.x;
+        let y = h + self.h * 2 + self.y;
+
+        write!(
+            term,
+            "{}{}{:4}-{:02}-{:02}",
+            cursor::Goto(x, y),
+            OFF,
+            date.y,
+            date.m,
+            date.d,
+        )?;
+
         term.flush()?;
         self.date = date;
         self.time = time;
