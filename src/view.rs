@@ -22,7 +22,8 @@ const OFF: color::Bg<&'static dyn color::Color> = color::Bg(&color::Reset);
 pub struct Clock {
     x: u16,
     y: u16,
-    size: u16,
+    w: u16,
+    h: u16,
     date: time::Date,
     time: time::Time,
 }
@@ -35,17 +36,21 @@ impl Clock {
 
         for digit in 0..8 {
 
-            let dx = self.x + 1 + 4 * self.size * digit as u16;
+            let dx = self.x + 1 + 4 * self.w * digit as u16;
             let dy = self.y + 1;
 
             let mut mask = 0b1_000_000_000_000_000u16;
 
             for i in 0..15 {
                 mask >>= 1; if draw[digit] & mask == 0 { continue }
-                let shift = cursor::Goto(i % 3 * self.size + dx, i / 3 + dy);
                 let color = if time[digit] & mask > 0 { ON } else { OFF };
-                let width = self.size as usize;
-                write!(term, "{}{}{:3$}", shift, color, " ", width)?;
+                let width = self.w as usize;
+                let x = i % 3 * self.w + dx;
+                let y = i / 3 * self.h + dy;
+                for j in 0..self.h {
+                    let shift = cursor::Goto(x, y + j);
+                    write!(term, "{}{}{:3$}", shift, color, " ", width)?;
+                }
             }
         }
 
@@ -61,7 +66,8 @@ impl Default for Clock {
         Clock {
             x: 1,
             y: 1,
-            size: 5,
+            w: 2,
+            h: 1,
             date: time::Date::default(),
             time: time::Time::default(),
         }
