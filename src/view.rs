@@ -1,6 +1,13 @@
-use std::collections::HashSet;
+use std::io;
 
-use chrono::prelude::*;
+use termion::color;
+use termion::cursor;
+use termion::raw;
+
+use crate::time;
+
+const ON: color::Bg<&'static dyn color::Color> = color::Bg(&color::Blue);
+const OFF: color::Bg<&'static dyn color::Color> = color::Bg(&color::Reset);
 
 //  H       :   M       :   S
 // ...|...|...|...|...|...|...|...
@@ -12,29 +19,37 @@ use chrono::prelude::*;
 //           ....-..-..
 //           Y    M  S
 #[derive(Clone, Debug, Default)]
-pub struct View {
+pub struct Clock {
     x: u16,
     y: u16,
-    block: u8,
-    dirty: HashSet<(u16, u16)>,
-
-    hour: u8, 
-    min: u8,
-    sec: u8,
-    year: i32,
-    mon: u8,
-    day: u8,
+    size: u16,
+    date: time::Date,
+    time: time::Time,
 }
 
-impl View {
-    pub fn update(&mut self) {
-        let now = chrono::Local::now();
-        let hour = now.hour() as u8;
-        let min = now.minute() as u8;
-        let sec = now.second() as u8;
-        let year = now.year();
-        let mon = now.month() as u8;
-        let day = now.day() as u8;
-    }
+impl Clock {
+    pub fn tick<W: io::Write>(&mut self, term: &mut raw::RawTerminal<W>) -> io::Result<()> {
 
+        let (date, time) = time::now();
+        let draw = self.time ^ time;
+
+        for (dx, digit) in (0..8).map(|digit| (digit * 4 * self.size, digit as usize)) {
+
+            let mut mask = 0b1_000_000_000_000_000u16;
+
+            for (x, y) in (0..15).map(|index| (index % 3 + dx + self.x, index / 3 + self.y)) {
+                mask >>= 1;
+                if draw[digit] & mask == 0 { continue }
+                let next = cursor::Goto(x, y);
+                let color = if time[digit] & mask > 0 { ON } else { OFF };
+                let width = self.size as usize;
+                write!(term, "{}{}{:3$}", next, color, " ", width)?;
+            }
+
+        }
+
+        self.date = date;
+        self.time = time;
+        Ok(())
+    }
 }

@@ -128,7 +128,7 @@ impl<Tz: TimeZone> From<&DateTime<Tz>> for Time {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default)]
 pub struct Date {
     pub y: i32,
     pub m: u8,
