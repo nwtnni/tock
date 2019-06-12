@@ -7,6 +7,10 @@ use chrono::prelude::*;
 // ...
 pub const COLON: u16 = 0b0_000_010_000_010_000;
 
+pub const DIGIT_H: u16 = 5;
+
+pub const DIGIT_W: u16 = 3;
+
 pub const DIGIT: [u16; 10] = [
     // xxx
     // x.x
@@ -87,30 +91,20 @@ pub fn now() -> (Date, Time) {
 }
 
 #[derive(Copy, Clone, Debug, Default)]
-pub struct Time([u16; 6]);
+pub struct Time([u16; 8]);
 
 impl std::ops::Index<usize> for Time {
     type Output = u16;
     fn index(&self, idx: usize) -> &Self::Output {
-        match idx {
-        | 0 => &self.0[0],
-        | 1 => &self.0[1],
-        | 2 => &COLON,
-        | 3 => &self.0[2],
-        | 4 => &self.0[3],
-        | 5 => &COLON,
-        | 6 => &self.0[4],
-        | 7 => &self.0[5],
-        | _ => unreachable!(),
-        }
+        &self.0[idx]
     }
 }
 
 impl std::ops::BitXor for Time {
     type Output = Time;
     fn bitxor(self, rhs: Time) -> Self::Output {
-        let mut time = [0; 6];
-        for i in 0..6 { time[i] = self.0[i] ^ rhs.0[i]; }
+        let mut time = [0; 8];
+        for i in 0..8 { time[i] = self.0[i] ^ rhs.0[i]; }
         Time(time)
     }
 }
@@ -121,8 +115,8 @@ impl<Tz: TimeZone> From<&DateTime<Tz>> for Time {
         let m = time.minute() as usize;
         let s = time.second() as usize;
         Time([
-             DIGIT[h / 10], DIGIT[h % 10],
-             DIGIT[m / 10], DIGIT[m % 10],
+             DIGIT[h / 10], DIGIT[h % 10], COLON,
+             DIGIT[m / 10], DIGIT[m % 10], COLON,
              DIGIT[s / 10], DIGIT[s % 10],
         ])
     }

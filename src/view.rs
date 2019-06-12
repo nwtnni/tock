@@ -36,7 +36,7 @@ impl Clock {
 
         for digit in 0..8 {
 
-            let dx = self.x + 1 + 4 * self.w * digit as u16;
+            let dx = self.x + 1 + ((time::DIGIT_W + 1) * self.w * digit as u16);
             let dy = self.y + 1;
 
             let mut mask = 0b1_000_000_000_000_000u16;
@@ -45,25 +45,22 @@ impl Clock {
                 mask >>= 1; if draw[digit] & mask == 0 { continue }
                 let color = if time[digit] & mask > 0 { ON } else { OFF };
                 let width = self.w as usize;
-                let x = i % 3 * self.w + dx;
-                let y = i / 3 * self.h + dy;
+                let x = i % time::DIGIT_W * self.w + dx;
+                let y = i / time::DIGIT_W * self.h + dy;
                 for j in 0..self.h {
-                    let shift = cursor::Goto(x, y + j);
-                    write!(term, "{}{}{:3$}", shift, color, " ", width)?;
+                    let goto = cursor::Goto(x, y + j);
+                    write!(term, "{}{}{:3$}", goto, color, " ", width)?;
                 }
             }
         }
 
-        let w = (self.w * 4 << 3) - 1;
-        let h = self.h * 5;
-
-        let x = w / 2 - (4 + 1 + 2 + 1 + 2) / 2 + self.x;
-        let y = h + self.h * 2 + self.y;
+        let date_x = self.x + 1 + self.width() / 2 - 5;
+        let date_y = self.y + 1 + self.height() + 2;
 
         write!(
             term,
             "{}{}{:4}-{:02}-{:02}",
-            cursor::Goto(x, y),
+            cursor::Goto(date_x, date_y),
             OFF,
             date.y,
             date.m,
@@ -74,6 +71,14 @@ impl Clock {
         self.date = date;
         self.time = time;
         Ok(())
+    }
+
+    pub fn width(&self) -> u16 {
+        ((self.w * (time::DIGIT_W + 1)) << 3) - 1
+    }
+
+    pub fn height(&self) -> u16 {
+        (self.h * time::DIGIT_H)
     }
 }
 
