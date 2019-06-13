@@ -1,5 +1,6 @@
 use std::io;
 
+use termion::clear;
 use termion::color;
 use termion::cursor;
 use termion::raw;
@@ -26,11 +27,35 @@ pub struct Clock {
     h: u16,
     date: time::Date,
     time: time::Time,
+    second: bool,
 }
 
 impl Clock {
-    pub fn new(x: u16, y: u16, w: u16, h: u16) -> Self {
-        Clock { x, y, w, h, date: time::Date::default(), time: time::Time::default() }
+    pub fn new(
+        x: u16,
+        y: u16,
+        w: u16,
+        h: u16,
+        second: bool,
+    ) -> Self {
+        Clock {
+            x, y,
+            w, h,
+            date: time::Date::default(),
+            time: time::Time::default(),
+            second,
+        }
+    }
+
+    pub fn center(&mut self, w: u16, h: u16) {
+        self.x = w / 2 - self.width() / 2;
+        self.y = h / 2 - self.height() / 2;
+    }
+
+    pub fn reset<W: io::Write>(&mut self, term: &mut raw::RawTerminal<W>) -> io::Result<()> {
+        self.date = time::Date::default();
+        self.time = time::Time::default();
+        write!(term, "{}", clear::All)
     }
 
     pub fn tick<W: io::Write>(&mut self, term: &mut raw::RawTerminal<W>) -> io::Result<()> {
@@ -38,7 +63,7 @@ impl Clock {
         let (date, time) = time::now();
         let draw = self.time ^ time;
 
-        for digit in 0..8 {
+        for digit in 0..self.digits() {
 
             let dx = self.x + 1 + ((time::DIGIT_W + 1) * self.w * digit as u16);
             let dy = self.y + 1;
@@ -77,8 +102,12 @@ impl Clock {
         Ok(())
     }
 
+    fn digits(&self) -> usize {
+        if self.second { 8 } else { 5 }
+    }
+
     pub fn width(&self) -> u16 {
-        ((self.w * (time::DIGIT_W + 1)) << 3) - 1
+        (self.w * (time::DIGIT_W + 1)) * self.digits() as u16 - 1
     }
 
     pub fn height(&self) -> u16 {
