@@ -1,15 +1,20 @@
 use std::io;
 
 use chrono::Timelike;
-use termion::clear;
-use termion::color;
-use termion::cursor;
 
 use crate::font;
+use crate::term;
 use crate::time;
 
-const ON: color::Bg<&'static dyn color::Color> = color::Bg(&color::Blue);
-const OFF: color::Bg<&'static dyn color::Color> = color::Bg(&color::Reset);
+const ON: term::Paint = term::Paint {
+    color: term::Color::ANSI(term::ANSI::Blue),
+    ground: term::Ground::Back,
+};
+
+const OFF: term::Paint = term::Paint {
+    color: term::Color::Reset,
+    ground: term::Ground::Back,
+};
 
 //  H       :   M       :   S
 // ...|...|...|...|...|...|...|...
@@ -48,7 +53,7 @@ impl<W: io::Write> Clock<W> {
         second: bool,
         military: bool,
     ) -> io::Result<Self> {
-        write!(term, "{}", cursor::Hide)?;
+        write!(term, "{}", term::HIDE)?;
         Ok(Clock {
             x, y,
             w, h,
@@ -69,7 +74,7 @@ impl<W: io::Write> Clock<W> {
         }
         self.date = time::Date::blank();
         self.time = time::Time::blank(self.second, self.military);
-        write!(self.term, "{}{}", OFF, clear::All)
+        write!(self.term, "{}{}", OFF, term::CLEAR)
     }
 
     /// Best effort real-time synchronization.
@@ -86,8 +91,8 @@ impl<W: io::Write> Clock<W> {
 
         for digit in 0..self.digits() {
 
-            let dx = 1 + self.x + ((font::W + 1) * self.w * digit as u16);
-            let dy = 1 + self.y;
+            let dx = self.x + ((font::W + 1) * self.w * digit as u16);
+            let dy = self.y;
 
             let mut mask = 0b1_000_000_000_000_000u16;
 
@@ -98,16 +103,16 @@ impl<W: io::Write> Clock<W> {
                 let x = i % font::W * self.w + dx;
                 let y = i / font::W * self.h + dy;
                 for j in 0..self.h {
-                    let goto = cursor::Goto(x, y + j);
+                    let goto = term::Move(x, y + j);
                     write!(self.term, "{}{}{:3$}", color, goto, " ", width)?;
                 }
             }
         }
 
         if date != self.date {
-            let date_x = 1 + self.x + self.width() / 2 - date.width() / 2;
-            let date_y = 1 + self.y + self.height() + 1;
-            let goto = cursor::Goto(date_x, date_y);
+            let date_x = self.x + self.width() / 2 - date.width() / 2;
+            let date_y = self.y + self.height() + 1;
+            let goto = term::Move(date_x, date_y);
             write!(self.term, "{}{}{}", OFF, goto, date)?;
         }
 
@@ -135,10 +140,10 @@ impl<W: io::Write> Drop for Clock<W> {
         write!(
             self.term,
             "{}{}{}{}",
-            color::Bg(color::Reset),
-            clear::All,
-            cursor::Show,
-            cursor::Goto(1, 1),
+            OFF,
+            term::CLEAR,
+            term::SHOW,
+            term::Move::default(),
         ).ok();
     }
 }
