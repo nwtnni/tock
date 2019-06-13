@@ -37,6 +37,16 @@ struct Opt {
     /// Center the clock in the terminal. Overrides manual positioning.
     #[structopt(short = "c", long = "center")]
     center: bool,
+
+    /// Change time zone. Defaults to system local time.
+    ///
+    /// Refer to the [Time Zone Database][0] and its [repository][1]
+    /// for official time zone names.
+    ///
+    /// [0]: http://www.iana.org/time-zones
+    /// [1]: https://github.com/eggert/tz
+    #[structopt(short = "z", long = "timezone")]
+    zone: Option<chrono_tz::Tz>,
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
@@ -50,12 +60,16 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         args.y,
         args.w,
         args.h,
+        args.zone,
         stdout.lock(),
         args.center,
         args.second,
     )?;
 
-    let mut size = (0, 0);
+    // Draw immediately for responsiveness
+    let mut size = termion::terminal_size()?;
+    clock.reset(size)?;
+    clock.draw()?;
 
     for _ in 0..10 {
         let new_size = termion::terminal_size()?;

@@ -28,6 +28,7 @@ pub struct Clock<W: io::Write> {
     h: u16,
     date: time::Date,
     time: time::Time,
+    zone: Option<chrono_tz::Tz>,
     term: W,
     center: bool,
     second: bool,
@@ -40,16 +41,18 @@ impl<W: io::Write> Clock<W> {
         y: u16,
         w: u16,
         h: u16,
+        zone: Option<chrono_tz::Tz>,
         mut term: W,
         center: bool,
         second: bool,
     ) -> io::Result<Self> {
-        write!(term, "{}{}", clear::All, cursor::Hide)?;
+        write!(term, "{}", cursor::Hide)?;
         Ok(Clock {
             x, y,
             w, h,
             date: time::Date::default(),
             time: time::Time::default(),
+            zone,
             term,
             center,
             second,
@@ -75,7 +78,7 @@ impl<W: io::Write> Clock<W> {
 
     pub fn draw(&mut self) -> io::Result<()> {
 
-        let (date, time) = time::now();
+        let (date, time) = time::now(&self.zone);
         let draw = self.time ^ time;
 
         for digit in 0..self.digits() {
@@ -93,23 +96,16 @@ impl<W: io::Write> Clock<W> {
                 let y = i / font::DIGIT_W * self.h + dy;
                 for j in 0..self.h {
                     let goto = cursor::Goto(x, y + j);
-                    write!(self.term, "{}{}{:3$}", goto, color, " ", width)?;
+                    write!(self.term, "{}{}{:3$}", color, goto, " ", width)?;
                 }
             }
         }
 
         if date != self.date {
-            let date_x = 1 + self.x + self.width() / 2 - 5;
+            let date_x = 1 + self.x + self.width() / 2 - date.width() / 2;
             let date_y = 1 + self.y + self.height() + 1;
-            write!(
-                self.term,
-                "{}{}{:4}-{:02}-{:02}",
-                cursor::Goto(date_x, date_y),
-                OFF,
-                date.y,
-                date.m,
-                date.d,
-            )?;
+            let goto = cursor::Goto(date_x, date_y);
+            write!(self.term, "{}{}{}", OFF, goto, date)?;
         }
 
         self.term.flush()?;

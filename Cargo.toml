@@ -5,9 +5,10 @@ authors = ["Newton Ni <nwtnni@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-termion = "1.5.2"
 chrono = "0.4.6"
+chrono-tz = "0.5.1"
 structopt = "0.2.16"
+termion = "1.5.2"
 
 [profile.release]
 opt-level = 'z'

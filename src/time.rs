@@ -1,16 +1,43 @@
+use std::fmt;
+
 use chrono::prelude::*;
 
 use crate::font;
 
-pub fn now() -> (Date, Time) {
-    let now = chrono::Local::now();
-    let date = Date::from(&now);
-    let time = Time::from(&now);
-    (date, time)
+pub fn now(tz: &Option<chrono_tz::Tz>) -> (Date, Time) {
+    if let &Some(tz) = tz {
+        let dt = chrono::Utc::now().with_timezone(&tz);
+        let date = Date::new(&dt, tz.name());
+        let time = Time::new(&dt);
+        (date, time)
+    } else {
+        let dt = chrono::Local::now();
+        let date = Date::new(&dt, "Local");
+        let time = Time::new(&dt);
+        (date, time)
+    }
 }
 
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Time([u16; 8]);
+
+impl Time {
+    fn new<T: Timelike>(time: &T) -> Self {
+        let h = time.hour() as usize;
+        let m = time.minute() as usize;
+        let s = time.second() as usize;
+        Time([
+             font::DIGIT[h / 10],
+             font::DIGIT[h % 10],
+             font::COLON,
+             font::DIGIT[m / 10],
+             font::DIGIT[m % 10],
+             font::COLON,
+             font::DIGIT[s / 10],
+             font::DIGIT[s % 10],
+        ])
+    }
+}
 
 impl std::ops::Index<usize> for Time {
     type Output = u16;
@@ -28,37 +55,31 @@ impl std::ops::BitXor for Time {
     }
 }
 
-impl<Tz: TimeZone> From<&DateTime<Tz>> for Time {
-    fn from(time: &DateTime<Tz>) -> Self {
-        let h = time.hour() as usize;
-        let m = time.minute() as usize;
-        let s = time.second() as usize;
-        Time([
-             font::DIGIT[h / 10],
-             font::DIGIT[h % 10],
-             font::COLON,
-             font::DIGIT[m / 10],
-             font::DIGIT[m % 10],
-             font::COLON,
-             font::DIGIT[s / 10],
-             font::DIGIT[s % 10],
-        ])
-    }
-}
-
-#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Date {
     pub y: i32,
     pub m: u8,
     pub d: u8,
+    pub z: &'static str,
 }
 
-impl<Tz: TimeZone> From<&DateTime<Tz>> for Date {
-    fn from(date: &DateTime<Tz>) -> Date {
+impl Date {
+    fn new<D: Datelike>(date: &D, zone: &'static str) -> Date {
         Date {
             y: date.year(),
             m: date.month() as u8,
             d: date.day() as u8,
+            z: zone,
         }
+    }
+
+    pub fn width(&self) -> u16 {
+        4 + 1 + 2 + 1 + 2 + 3 + self.z.len() as u16
+    }
+}
+
+impl fmt::Display for Date {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{:4}-{:02}-{:02} | {}", self.y, self.m, self.d, self.z)
     }
 }
