@@ -98,18 +98,19 @@ impl<W: io::Write> Clock<W> {
             }
         }
 
-        let date_x = 1 + self.x + self.width() / 2 - 5;
-        let date_y = 1 + self.y + self.height() + 1;
-
-        write!(
-            self.term,
-            "{}{}{:4}-{:02}-{:02}",
-            cursor::Goto(date_x, date_y),
-            OFF,
-            date.y,
-            date.m,
-            date.d,
-        )?;
+        if date != self.date {
+            let date_x = 1 + self.x + self.width() / 2 - 5;
+            let date_y = 1 + self.y + self.height() + 1;
+            write!(
+                self.term,
+                "{}{}{:4}-{:02}-{:02}",
+                cursor::Goto(date_x, date_y),
+                OFF,
+                date.y,
+                date.m,
+                date.d,
+            )?;
+        }
 
         self.term.flush()?;
         self.date = date;
