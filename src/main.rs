@@ -1,11 +1,7 @@
 use std::error;
 use std::io;
-use std::io::Write;
 
 use structopt::StructOpt;
-use termion::clear;
-use termion::color;
-use termion::cursor;
 use termion::raw::IntoRawMode;
 
 mod font;
@@ -57,17 +53,17 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         args.w,
         args.h,
         stdout.lock(),
-        args.second
+        args.center,
+        args.second,
     )?;
 
-    let (mut w, mut h) = termion::terminal_size()?;
-    if args.center { clock.center(w, h); }
+    let mut w = 0;
+    let mut h = 0;
 
     for _ in 0..5 {
         let (new_w, new_h) = termion::terminal_size()?;
         if w != new_w || h != new_h {
-            clock.reset()?;
-            clock.center(new_w, new_h);
+            clock.reset(new_w, new_h)?;
             w = new_w; 
             h = new_h;
         }

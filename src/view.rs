@@ -3,7 +3,6 @@ use std::io;
 use termion::clear;
 use termion::color;
 use termion::cursor;
-use termion::raw;
 
 use crate::font;
 use crate::time;
@@ -29,11 +28,21 @@ pub struct Clock<W: io::Write> {
     date: time::Date,
     time: time::Time,
     term: W,
+    center: bool,
     second: bool,
 }
 
 impl<W: io::Write> Clock<W> {
-    pub fn start(x: u16, y: u16, w: u16, h: u16, mut term: W, second: bool) -> io::Result<Self> {
+
+    pub fn start(
+        x: u16,
+        y: u16,
+        w: u16,
+        h: u16,
+        mut term: W,
+        center: bool,
+        second: bool,
+    ) -> io::Result<Self> {
         write!(term, "{}{}", clear::All, cursor::Hide)?;
         Ok(Clock {
             x, y,
@@ -41,16 +50,16 @@ impl<W: io::Write> Clock<W> {
             date: time::Date::default(),
             time: time::Time::default(),
             term,
+            center,
             second,
         })
     }
 
-    pub fn center(&mut self, w: u16, h: u16) {
-        self.x = w / 2 - self.width() / 2;
-        self.y = h / 2 - self.height() / 2;
-    }
-
-    pub fn reset(&mut self) -> io::Result<()> {
+    pub fn reset(&mut self, w: u16, h: u16) -> io::Result<()> {
+        if self.center {
+            self.x = w / 2 - self.width() / 2;
+            self.y = h / 2 - self.height() / 2;
+        }
         self.date = time::Date::default();
         self.time = time::Time::default();
         write!(self.term, "{}", clear::All)
