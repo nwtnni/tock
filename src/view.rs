@@ -73,7 +73,7 @@ impl<W: io::Write> Clock<W> {
         std::thread::sleep(delay);
     }
 
-    pub fn tick(&mut self) -> io::Result<()> {
+    pub fn draw(&mut self) -> io::Result<()> {
 
         let (date, time) = time::now();
         let draw = self.time ^ time;

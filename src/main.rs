@@ -66,7 +66,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             h = new_h;
         }
         clock.sync();
-        clock.tick()?;
+        clock.draw()?;
     }
 
     Ok(())
