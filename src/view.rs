@@ -56,7 +56,7 @@ impl<W: io::Write> Clock<W> {
         })
     }
 
-    pub fn reset(&mut self, w: u16, h: u16) -> io::Result<()> {
+    pub fn reset(&mut self, (w, h): (u16, u16)) -> io::Result<()> {
         if self.center {
             self.x = w / 2 - self.width() / 2;
             self.y = h / 2 - self.height() / 2;

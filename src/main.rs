@@ -55,15 +55,13 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         args.second,
     )?;
 
-    let mut w = 0;
-    let mut h = 0;
+    let mut size = (0, 0);
 
     for _ in 0..10 {
-        let (new_w, new_h) = termion::terminal_size()?;
-        if w != new_w || h != new_h {
-            clock.reset(new_w, new_h)?;
-            w = new_w; 
-            h = new_h;
+        let new_size = termion::terminal_size()?;
+        if size != new_size {
+            size = new_size;
+            clock.reset(size)?;
         }
         clock.sync();
         clock.draw()?;
