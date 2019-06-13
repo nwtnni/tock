@@ -1,3 +1,9 @@
+/// Height of a single character in bits.
+pub const H: u16 = 5;
+
+/// Width of a single character in bits.
+pub const W: u16 = 3;
+
 // ...
 // .x.
 // ...
@@ -6,11 +12,29 @@
 /// Bitmap colon character.
 pub const COLON: u16 = 0b0_000_010_000_010_000;
 
-/// Height of a single digit in bits.
-pub const DIGIT_H: u16 = 5;
+// .x.
+// x.x
+// xxx
+// x.x
+// x.x
+/// Bitmap A character.
+pub const A: u16 = 0b0_010_101_111_101_101;
 
-/// Width of a single digit in bits.
-pub const DIGIT_W: u16 = 3;
+// xx.
+// x.x
+// xx.
+// x..
+// x..
+/// Bitmap P character.
+pub const P: u16 = 0b0_110_101_110_100_100;
+
+// x.x
+// xxx
+// x.x
+// x.x
+// x.x
+/// Bitmap M character.
+pub const M: u16 = 0b0_101_111_101_101_101;
 
 /// Bitmap digit font. Uses lower 15 bits to store each 5x3 digit.
 pub const DIGIT: [u16; 10] = [
