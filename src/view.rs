@@ -1,5 +1,6 @@
 use std::io;
 
+use chrono::Timelike;
 use termion::clear;
 use termion::color;
 use termion::cursor;
@@ -63,6 +64,13 @@ impl<W: io::Write> Clock<W> {
         self.date = time::Date::default();
         self.time = time::Time::default();
         write!(self.term, "{}", clear::All)
+    }
+
+    /// Best effort real-time synchronization.
+    pub fn sync(&self) {
+        let start = chrono::Local::now().nanosecond() as u64;
+        let delay = std::time::Duration::from_nanos(1_000_000_000 - start);
+        std::thread::sleep(delay);
     }
 
     pub fn tick(&mut self) -> io::Result<()> {

@@ -42,8 +42,6 @@ struct Opt {
 fn main() -> Result<(), Box<dyn error::Error>> {
 
     let args = Opt::from_args();
-    let sleep = std::time::Duration::from_secs(1);
-
     let stdout = io::stdout().into_raw_mode()?;
     stdout.activate_raw_mode()?;
 
@@ -60,15 +58,15 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let mut w = 0;
     let mut h = 0;
 
-    for _ in 0..5 {
+    for _ in 0..10 {
         let (new_w, new_h) = termion::terminal_size()?;
         if w != new_w || h != new_h {
             clock.reset(new_w, new_h)?;
             w = new_w; 
             h = new_h;
         }
+        clock.sync();
         clock.tick()?;
-        std::thread::sleep(sleep);
     }
 
     Ok(())
