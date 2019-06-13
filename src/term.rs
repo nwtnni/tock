@@ -1,5 +1,6 @@
 use std::fmt;
 use std::io;
+use std::io::Read;
 use std::io::Write;
 use std::mem;
 
@@ -16,8 +17,10 @@ pub const RESET: &'static str = "\x1B[0m";
 
 /// Non-canonical mode terminal.
 pub struct Term<'main> {
-    ios: libc::termios,
-    out: io::StdoutLock<'main>,
+    termios: libc::termios,
+    stdin: io::StdinLock<'main>,
+    stdout: io::StdoutLock<'main>,
+    buffer: [u8; 1],
 }
 
 macro_rules! test {
@@ -27,58 +30,71 @@ macro_rules! test {
 }
 
 impl<'main> Term<'main> {
-    pub fn new(stdout: &'main mut io::Stdout) -> io::Result<Self> {
-        unsafe {
-            if libc::isatty(libc::STDIN_FILENO) != 1 {
-                return Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    "[USER ERROR]: expected stdin to be a TTY",
-                ))
+    pub fn new(
+        stdin: &'main mut io::Stdin,
+        stdout: &'main mut io::Stdout
+    ) -> io::Result<Self> {
+
+        let termios = unsafe {
+
+            if libc::isatty(libc::STDIN_FILENO) != 1
+            || libc::isatty(libc::STDOUT_FILENO) != 1 {
+                return Err(io::Error::new(io::ErrorKind::Other, "[USER ERROR]: not a TTY"))
             }
 
-            // Hold onto stdout lock
-            let mut out = stdout.lock();
+            // Get current settings
+            let mut termios: libc::termios = mem::zeroed();
+            test!(libc::tcgetattr(libc::STDIN_FILENO, &mut termios));
 
-            // Retrieve previous termios settings
-            let mut ios: libc::termios = mem::zeroed();
-            test!(libc::tcgetattr(libc::STDIN_FILENO, &mut ios));
-
-            // Change to canonical mode
-            let mut set = ios.clone();
+            // Change to non-canonical mode
+            let mut set = termios.clone();
             set.c_lflag &= !(libc::ICANON | libc::ECHO);
             set.c_cc[libc::VMIN] = 0;
             set.c_cc[libc::VTIME] = 0;
             test!(libc::tcsetattr(libc::STDIN_FILENO, libc::TCSANOW, &set));
 
-            write!(out, "{}", HIDE)?;
+            // Save for restoring later
+            termios
+        };
 
-            Ok(Term { ios, out })
-        }
+        // Hold onto locks
+        let stdin = stdin.lock();
+        let mut stdout = stdout.lock();
+        write!(stdout, "{}", HIDE)?;
+        Ok(Term { termios, stdin, stdout, buffer: [0] })
     }
 
-    pub fn size() -> io::Result<(u16, u16)> {
+    pub fn size(&self) -> io::Result<(u16, u16)> {
         unsafe {
             let mut size: libc::winsize = mem::zeroed();
             test!(libc::ioctl(libc::STDIN_FILENO, libc::TIOCGWINSZ.into(), &mut size));
             Ok((size.ws_col as u16, size.ws_row as u16))
         }
     }
+
+    pub fn poll(&mut self) -> Option<char> {
+        if let Ok(_) = self.stdin.read_exact(&mut self.buffer) {
+            Some(self.buffer[0] as char)
+        } else {
+            None
+        }
+    }
 }
 
 impl<'main> io::Write for Term<'main> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.out.write(buf)
+        self.stdout.write(buf)
     }
     fn flush(&mut self) -> io::Result<()> {
-        self.out.flush()
+        self.stdout.flush()
     }
 }
 
 impl<'main> Drop for Term<'main> {
     fn drop(&mut self) {
         unsafe {
-            write!(self.out, "{}{}{}{}", RESET, CLEAR, Move::default(), SHOW).ok();
-            libc::tcsetattr(libc::STDIN_FILENO, libc::TCSANOW, &self.ios);
+            write!(self.stdout, "{}{}{}{}", RESET, CLEAR, Move::default(), SHOW).ok();
+            libc::tcsetattr(libc::STDIN_FILENO, libc::TCSANOW, &self.termios);
         }
     }
 }
@@ -152,7 +168,7 @@ pub struct C256(pub u8);
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct CRGB {
-    pub r: u8,    
+    pub r: u8,
     pub g: u8,
     pub b: u8,
 }

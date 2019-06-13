@@ -59,8 +59,9 @@ struct Opt {
 fn main() -> Result<(), Box<dyn error::Error>> {
 
     let args = Opt::from_args();
+    let mut stdin = io::stdin();
     let mut stdout = io::stdout();
-    let mut term = term::Term::new(&mut stdout)?;
+    let mut term = term::Term::new(&mut stdin, &mut stdout)?;
 
     let finish = sync::Arc::<atomic::AtomicBool>::default();
     let resize = sync::Arc::<atomic::AtomicBool>::default();
@@ -80,7 +81,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     )?;
 
     // Draw immediately for responsiveness
-    let mut size = term::Term::size()?;
+    let mut size = term.size()?;
     if args.center { clock.center(size) }
     clock.reset(&mut term)?;
     clock.draw(&mut term)?;
@@ -88,9 +89,11 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     while !finish.load(atomic::Ordering::Relaxed) {
         if resize.load(atomic::Ordering::Relaxed) {
             resize.store(false, atomic::Ordering::Relaxed);
-            size = term::Term::size()?;
+            size = term.size()?;
             clock.reset(&mut term)?;
             if args.center { clock.center(size) }
+        }
+        if let Some(c) = term.poll() {
         }
         clock.sync();
         clock.draw(&mut term)?;
