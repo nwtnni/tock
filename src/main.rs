@@ -48,18 +48,17 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let args = Opt::from_args();
     let sleep = std::time::Duration::from_secs(1);
 
-    let mut stdout = io::stdout().into_raw_mode().unwrap();
-    let mut clock = view::Clock::new(
+    let stdout = io::stdout().into_raw_mode()?;
+    stdout.activate_raw_mode()?;
+
+    let mut clock = view::Clock::start(
         args.x,
         args.y,
         args.w,
         args.h,
+        stdout.lock(),
         args.second
-    );
-
-    stdout.activate_raw_mode()?;
-
-    write!(&mut stdout, "{}{}", clear::All, cursor::Hide)?;
+    )?;
 
     let (mut w, mut h) = termion::terminal_size()?;
     if args.center { clock.center(w, h); }
@@ -67,23 +66,14 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     for _ in 0..5 {
         let (new_w, new_h) = termion::terminal_size()?;
         if w != new_w || h != new_h {
-            clock.reset(&mut stdout)?;
+            clock.reset()?;
             clock.center(new_w, new_h);
             w = new_w; 
             h = new_h;
         }
-        clock.tick(&mut stdout)?;
+        clock.tick()?;
         std::thread::sleep(sleep);
     }
-
-    write!(
-        &mut stdout,
-        "{}{}{}{}",
-        color::Bg(color::Reset),
-        clear::All,
-        cursor::Show,
-        cursor::Goto(1, 1),
-    )?;
 
     Ok(())
 }

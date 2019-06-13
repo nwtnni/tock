@@ -21,25 +21,28 @@ const OFF: color::Bg<&'static dyn color::Color> = color::Bg(&color::Reset);
 //           ....-..-..
 //           Y    M  S
 #[derive(Clone, Debug)]
-pub struct Clock {
+pub struct Clock<W: io::Write> {
     x: u16,
     y: u16,
     w: u16,
     h: u16,
     date: time::Date,
     time: time::Time,
+    term: W,
     second: bool,
 }
 
-impl Clock {
-    pub fn new(x: u16, y: u16, w: u16, h: u16, second: bool) -> Self {
-        Clock {
+impl<W: io::Write> Clock<W> {
+    pub fn start(x: u16, y: u16, w: u16, h: u16, mut term: W, second: bool) -> io::Result<Self> {
+        write!(term, "{}{}", clear::All, cursor::Hide)?;
+        Ok(Clock {
             x, y,
             w, h,
             date: time::Date::default(),
             time: time::Time::default(),
+            term,
             second,
-        }
+        })
     }
 
     pub fn center(&mut self, w: u16, h: u16) {
@@ -47,13 +50,13 @@ impl Clock {
         self.y = h / 2 - self.height() / 2;
     }
 
-    pub fn reset<W: io::Write>(&mut self, term: &mut raw::RawTerminal<W>) -> io::Result<()> {
+    pub fn reset(&mut self) -> io::Result<()> {
         self.date = time::Date::default();
         self.time = time::Time::default();
-        write!(term, "{}", clear::All)
+        write!(self.term, "{}", clear::All)
     }
 
-    pub fn tick<W: io::Write>(&mut self, term: &mut raw::RawTerminal<W>) -> io::Result<()> {
+    pub fn tick(&mut self) -> io::Result<()> {
 
         let (date, time) = time::now();
         let draw = self.time ^ time;
@@ -73,7 +76,7 @@ impl Clock {
                 let y = i / font::DIGIT_W * self.h + dy;
                 for j in 0..self.h {
                     let goto = cursor::Goto(x, y + j);
-                    write!(term, "{}{}{:3$}", goto, color, " ", width)?;
+                    write!(self.term, "{}{}{:3$}", goto, color, " ", width)?;
                 }
             }
         }
@@ -82,7 +85,7 @@ impl Clock {
         let date_y = self.y + 1 + self.height() + 2;
 
         write!(
-            term,
+            self.term,
             "{}{}{:4}-{:02}-{:02}",
             cursor::Goto(date_x, date_y),
             OFF,
@@ -91,7 +94,7 @@ impl Clock {
             date.d,
         )?;
 
-        term.flush()?;
+        self.term.flush()?;
         self.date = date;
         self.time = time;
         Ok(())
@@ -107,5 +110,18 @@ impl Clock {
 
     pub fn height(&self) -> u16 {
         (self.h * font::DIGIT_H)
+    }
+}
+
+impl<W: io::Write> Drop for Clock<W> {
+    fn drop(&mut self) {
+        write!(
+            self.term,
+            "{}{}{}{}",
+            color::Bg(color::Reset),
+            clear::All,
+            cursor::Show,
+            cursor::Goto(1, 1),
+        ).ok();
     }
 }
