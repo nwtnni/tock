@@ -60,6 +60,14 @@ impl Clock {
         })
     }
 
+    pub fn toggle_second(&mut self) {
+        self.second = !self.second;
+    }
+
+    pub fn toggle_military(&mut self) {
+        self.military = !self.military;
+    }
+
     pub fn center(&mut self, (w, h): (u16, u16)) {
         self.x = w / 2 - self.width() / 2;
         self.y = h / 2 - self.height() / 2;

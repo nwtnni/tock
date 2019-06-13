@@ -86,16 +86,32 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     clock.reset(&mut term)?;
     clock.draw(&mut term)?;
 
-    while !finish.load(atomic::Ordering::Relaxed) {
+    'main: while !finish.load(atomic::Ordering::Relaxed) {
+
+        let mut dirty = false;
+
         if resize.load(atomic::Ordering::Relaxed) {
             resize.store(false, atomic::Ordering::Relaxed);
             size = term.size()?;
-            clock.reset(&mut term)?;
-            if args.center { clock.center(size) }
+            dirty = true;
         }
-        if let Some(c) = term.poll() {
+
+        while let Some(c) = term.poll() {
+            match c {
+            | 'q' | 'Q' | '\x1B' => break 'main,
+            | 's' => { dirty = true; clock.toggle_second(); }
+            | 'm' => { dirty = true; clock.toggle_military(); }
+            | _ => (),
+            }
         }
+
         clock.sync();
+
+        if dirty {
+            if args.center { clock.center(size) }
+            clock.reset(&mut term)?;
+        }
+
         clock.draw(&mut term)?;
     }
 
