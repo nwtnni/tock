@@ -5,6 +5,7 @@ use termion::color;
 use termion::cursor;
 use termion::raw;
 
+use crate::font;
 use crate::time;
 
 const ON: color::Bg<&'static dyn color::Color> = color::Bg(&color::Blue);
@@ -31,13 +32,7 @@ pub struct Clock {
 }
 
 impl Clock {
-    pub fn new(
-        x: u16,
-        y: u16,
-        w: u16,
-        h: u16,
-        second: bool,
-    ) -> Self {
+    pub fn new(x: u16, y: u16, w: u16, h: u16, second: bool) -> Self {
         Clock {
             x, y,
             w, h,
@@ -65,7 +60,7 @@ impl Clock {
 
         for digit in 0..self.digits() {
 
-            let dx = self.x + 1 + ((time::DIGIT_W + 1) * self.w * digit as u16);
+            let dx = self.x + 1 + ((font::DIGIT_W + 1) * self.w * digit as u16);
             let dy = self.y + 1;
 
             let mut mask = 0b1_000_000_000_000_000u16;
@@ -74,8 +69,8 @@ impl Clock {
                 mask >>= 1; if draw[digit] & mask == 0 { continue }
                 let color = if time[digit] & mask > 0 { ON } else { OFF };
                 let width = self.w as usize;
-                let x = i % time::DIGIT_W * self.w + dx;
-                let y = i / time::DIGIT_W * self.h + dy;
+                let x = i % font::DIGIT_W * self.w + dx;
+                let y = i / font::DIGIT_W * self.h + dy;
                 for j in 0..self.h {
                     let goto = cursor::Goto(x, y + j);
                     write!(term, "{}{}{:3$}", goto, color, " ", width)?;
@@ -107,10 +102,10 @@ impl Clock {
     }
 
     pub fn width(&self) -> u16 {
-        (self.w * (time::DIGIT_W + 1)) * self.digits() as u16 - 1
+        (self.w * (font::DIGIT_W + 1)) * self.digits() as u16 - 1
     }
 
     pub fn height(&self) -> u16 {
-        (self.h * time::DIGIT_H)
+        (self.h * font::DIGIT_H)
     }
 }

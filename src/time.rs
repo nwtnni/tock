@@ -1,87 +1,6 @@
 use chrono::prelude::*;
 
-// ...
-// .x.
-// ...
-// .x.
-// ...
-pub const COLON: u16 = 0b0_000_010_000_010_000;
-
-pub const DIGIT_H: u16 = 5;
-
-pub const DIGIT_W: u16 = 3;
-
-pub const DIGIT: [u16; 10] = [
-    // xxx
-    // x.x
-    // x.x
-    // x.x
-    // xxx
-    0b0_111_101_101_101_111,
-
-    // ..x
-    // ..x
-    // ..x
-    // ..x
-    // ..x
-    0b0_001_001_001_001_001,
-
-    // xxx
-    // ..x
-    // xxx
-    // x..
-    // xxx
-    0b0_111_001_111_100_111,
-
-    // xxx
-    // ..x
-    // xxx
-    // ..x
-    // xxx
-    0b0_111_001_111_001_111,
-
-    // x.x
-    // x.x
-    // xxx
-    // ..x
-    // ..x
-    0b0_101_101_111_001_001,
-
-    // xxx
-    // x..
-    // xxx
-    // ..x
-    // xxx
-    0b0_111_100_111_001_111,
-
-    // xxx
-    // x..
-    // xxx
-    // x.x
-    // xxx
-    0b0_111_100_111_101_111,
-
-    // xxx
-    // ..x
-    // ..x
-    // ..x
-    // ..x
-    0b0_111_001_001_001_001,
-
-    // xxx
-    // x.x
-    // xxx
-    // x.x
-    // xxx
-    0b0_111_101_111_101_111,
-
-    // xxx
-    // x.x
-    // xxx
-    // ..x
-    // ..x
-    0b0_111_101_111_001_001,
-];
+use crate::font;
 
 pub fn now() -> (Date, Time) {
     let now = chrono::Local::now();
@@ -115,9 +34,14 @@ impl<Tz: TimeZone> From<&DateTime<Tz>> for Time {
         let m = time.minute() as usize;
         let s = time.second() as usize;
         Time([
-             DIGIT[h / 10], DIGIT[h % 10], COLON,
-             DIGIT[m / 10], DIGIT[m % 10], COLON,
-             DIGIT[s / 10], DIGIT[s % 10],
+             font::DIGIT[h / 10],
+             font::DIGIT[h % 10],
+             font::COLON,
+             font::DIGIT[m / 10],
+             font::DIGIT[m % 10],
+             font::COLON,
+             font::DIGIT[s / 10],
+             font::DIGIT[s % 10],
         ])
     }
 }

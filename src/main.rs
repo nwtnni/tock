@@ -8,6 +8,7 @@ use termion::color;
 use termion::cursor;
 use termion::raw::IntoRawMode;
 
+mod font;
 mod time;
 mod view;
 
