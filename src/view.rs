@@ -29,6 +29,10 @@ pub struct Clock {
 }
 
 impl Clock {
+    pub fn new(x: u16, y: u16, w: u16, h: u16) -> Self {
+        Clock { x, y, w, h, date: time::Date::default(), time: time::Time::default() }
+    }
+
     pub fn tick<W: io::Write>(&mut self, term: &mut raw::RawTerminal<W>) -> io::Result<()> {
 
         let (date, time) = time::now();
@@ -79,18 +83,5 @@ impl Clock {
 
     pub fn height(&self) -> u16 {
         (self.h * time::DIGIT_H)
-    }
-}
-
-impl Default for Clock {
-    fn default() -> Self {
-        Clock {
-            x: 1,
-            y: 1,
-            w: 2,
-            h: 1,
-            date: time::Date::default(),
-            time: time::Time::default(),
-        }
     }
 }
