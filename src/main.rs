@@ -1,8 +1,9 @@
 use std::error;
 use std::io;
+use std::sync;
+use std::sync::atomic;
 
 use structopt::StructOpt;
-use termion::raw::IntoRawMode;
 
 mod font;
 mod time;
@@ -57,8 +58,14 @@ struct Opt {
 fn main() -> Result<(), Box<dyn error::Error>> {
 
     let args = Opt::from_args();
-    let stdout = io::stdout().into_raw_mode()?;
-    stdout.activate_raw_mode()?;
+    let stdout = io::stdout();
+
+    let finish = sync::Arc::<atomic::AtomicBool>::default();
+    let resize = sync::Arc::<atomic::AtomicBool>::default();
+
+    signal_hook::flag::register(signal_hook::SIGINT, finish.clone())?;
+    signal_hook::flag::register(signal_hook::SIGTERM, finish.clone())?;
+    signal_hook::flag::register(signal_hook::SIGWINCH, resize.clone())?;
 
     let mut clock = view::Clock::start(
         args.x,
@@ -77,11 +84,11 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     clock.reset(size)?;
     clock.draw()?;
 
-    for _ in 0..10 {
-        let new_size = termion::terminal_size()?;
-        if size != new_size {
-            size = new_size;
+    while !finish.load(atomic::Ordering::Relaxed) {
+        if resize.load(atomic::Ordering::Relaxed) {
+            size = termion::terminal_size()?;
             clock.reset(size)?;
+            resize.store(false, atomic::Ordering::Relaxed);
         }
         clock.sync();
         clock.draw()?;
