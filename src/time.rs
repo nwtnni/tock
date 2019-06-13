@@ -4,11 +4,7 @@ use chrono::prelude::*;
 
 use crate::font;
 
-pub fn now(
-    tz: &Option<chrono_tz::Tz>,
-    second: bool,
-    military: bool,
-) -> (Date, Time) {
+pub fn now(tz: &Option<chrono_tz::Tz>, second: bool, military: bool) -> (Date, Time) {
     if let &Some(tz) = tz {
         let dt = chrono::Utc::now().with_timezone(&tz);
         let date = Date::new(&dt, tz.name());
@@ -50,60 +46,43 @@ impl Time {
     }
 
     fn new<T: Timelike>(time: &T, second: bool, military: bool) -> Self {
+        use font::*;
         let m = time.minute() as usize;
         match (second, military) {
         | (true, true) => {
             let h = time.hour() as usize;
             let s = time.second() as usize;
             Time::S24([
-                font::DIGIT[h / 10],
-                font::DIGIT[h % 10],
-                font::COLON,
-                font::DIGIT[m / 10],
-                font::DIGIT[m % 10],
-                font::COLON,
-                font::DIGIT[s / 10],
-                font::DIGIT[s % 10],
+                DIGIT[h / 10], DIGIT[h % 10], COLON,
+                DIGIT[m / 10], DIGIT[m % 10], COLON,
+                DIGIT[s / 10], DIGIT[s % 10],
             ])
         }
         | (true, false) => {
             let (pm, h) = time.hour12();
+            let h = h as usize;
             let s = time.second() as usize;
             Time::S12([
-                font::DIGIT[h as usize / 10],
-                font::DIGIT[h as usize % 10],
-                font::COLON, 
-                font::DIGIT[m / 10],
-                font::DIGIT[m % 10],
-                font::COLON,
-                font::DIGIT[s / 10],
-                font::DIGIT[s % 10],
-                font::SPACE,
-                if pm { font::P } else { font::A },
-                font::M,
+                DIGIT[h / 10], DIGIT[h % 10], COLON, 
+                DIGIT[m / 10], DIGIT[m % 10], COLON,
+                DIGIT[s / 10], DIGIT[s % 10], SPACE,
+                if pm { P } else { A }, M,
             ])
         }
         | (false, true) => {
             let h = time.hour() as usize;
             Time::M24([
-                font::DIGIT[h / 10],
-                font::DIGIT[h % 10],
-                font::COLON,
-                font::DIGIT[m / 10],
-                font::DIGIT[m % 10],
+                DIGIT[h / 10], DIGIT[h % 10], COLON,
+                DIGIT[m / 10], DIGIT[m % 10],
             ])
         }
         | (false, false) => {
             let (pm, h) = time.hour12();
+            let h = h as usize;
             Time::M12([
-                font::DIGIT[h as usize / 10],
-                font::DIGIT[h as usize % 10],
-                font::COLON,
-                font::DIGIT[m / 10],
-                font::DIGIT[m % 10],
-                font::SPACE,
-                if pm { font::P } else { font::A },
-                font::M,
+                DIGIT[h / 10], DIGIT[h % 10], COLON,
+                DIGIT[m / 10], DIGIT[m % 10], SPACE,
+                if pm { P } else { A }, M,
             ])
         }
         }
