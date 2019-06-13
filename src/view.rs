@@ -72,8 +72,8 @@ impl<W: io::Write> Clock<W> {
 
         for digit in 0..self.digits() {
 
-            let dx = self.x + 1 + ((font::DIGIT_W + 1) * self.w * digit as u16);
-            let dy = self.y + 1;
+            let dx = 1 + self.x + ((font::DIGIT_W + 1) * self.w * digit as u16);
+            let dy = 1 + self.y;
 
             let mut mask = 0b1_000_000_000_000_000u16;
 
@@ -90,8 +90,8 @@ impl<W: io::Write> Clock<W> {
             }
         }
 
-        let date_x = self.x + 1 + self.width() / 2 - 5;
-        let date_y = self.y + 1 + self.height() + 2;
+        let date_x = 1 + self.x + self.width() / 2 - 5;
+        let date_y = 1 + self.y + self.height() + 1;
 
         write!(
             self.term,
