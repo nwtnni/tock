@@ -35,7 +35,6 @@ pub struct Clock<W: io::Write> {
     time: time::Time,
     zone: Option<chrono_tz::Tz>,
     term: W,
-    center: bool,
     second: bool,
     military: bool,
 }
@@ -49,7 +48,6 @@ impl<W: io::Write> Clock<W> {
         h: u16,
         zone: Option<chrono_tz::Tz>,
         mut term: W,
-        center: bool,
         second: bool,
         military: bool,
     ) -> io::Result<Self> {
@@ -61,17 +59,17 @@ impl<W: io::Write> Clock<W> {
             time: time::Time::blank(second, military),
             zone,
             term,
-            center,
             second,
             military,
         })
     }
 
-    pub fn reset(&mut self, (w, h): (u16, u16)) -> io::Result<()> {
-        if self.center {
-            self.x = w / 2 - self.width() / 2;
-            self.y = h / 2 - self.height() / 2;
-        }
+    pub fn center(&mut self, (w, h): (u16, u16)) {
+        self.x = w / 2 - self.width() / 2;
+        self.y = h / 2 - self.height() / 2;
+    }
+
+    pub fn reset(&mut self) -> io::Result<()> {
         self.date = time::Date::blank();
         self.time = time::Time::blank(self.second, self.military);
         write!(self.term, "{}{}", OFF, term::CLEAR)

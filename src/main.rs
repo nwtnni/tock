@@ -76,21 +76,22 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         args.h,
         args.zone,
         &mut term,
-        args.center,
         args.second,
         args.military,
     )?;
 
     // Draw immediately for responsiveness
     let mut size = term::Term::size()?;
-    clock.reset(size)?;
+    if args.center { clock.center(size) }
+    clock.reset()?;
     clock.draw()?;
 
     while !finish.load(atomic::Ordering::Relaxed) {
         if resize.load(atomic::Ordering::Relaxed) {
-            size = term::Term::size()?;
-            clock.reset(size)?;
             resize.store(false, atomic::Ordering::Relaxed);
+            size = term::Term::size()?;
+            clock.reset()?;
+            if args.center { clock.center(size) }
         }
         clock.sync();
         clock.draw()?;
