@@ -10,6 +10,7 @@ chrono-tz = "0.5.1"
 signal-hook = "0.1.9"
 structopt = "0.2.16"
 termion = "1.5.2"
+libc = "0.2.58"
 
 [profile.release]
 opt-level = 'z'

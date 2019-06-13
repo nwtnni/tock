@@ -6,6 +6,7 @@ use std::sync::atomic;
 use structopt::StructOpt;
 
 mod font;
+mod term;
 mod time;
 mod view;
 
@@ -58,7 +59,8 @@ struct Opt {
 fn main() -> Result<(), Box<dyn error::Error>> {
 
     let args = Opt::from_args();
-    let stdout = io::stdout();
+    let mut stdout = io::stdout();
+    let mut term = term::Term::new(&mut stdout)?;
 
     let finish = sync::Arc::<atomic::AtomicBool>::default();
     let resize = sync::Arc::<atomic::AtomicBool>::default();
@@ -73,20 +75,20 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         args.w,
         args.h,
         args.zone,
-        stdout.lock(),
+        &mut term,
         args.center,
         args.second,
         args.military,
     )?;
 
     // Draw immediately for responsiveness
-    let mut size = termion::terminal_size()?;
+    let mut size = term::Term::size()?;
     clock.reset(size)?;
     clock.draw()?;
 
     while !finish.load(atomic::Ordering::Relaxed) {
         if resize.load(atomic::Ordering::Relaxed) {
-            size = termion::terminal_size()?;
+            size = term::Term::size()?;
             clock.reset(size)?;
             resize.store(false, atomic::Ordering::Relaxed);
         }
