@@ -32,6 +32,7 @@ pub struct Clock<W: io::Write> {
     term: W,
     center: bool,
     second: bool,
+    military: bool,
 }
 
 impl<W: io::Write> Clock<W> {
@@ -45,17 +46,19 @@ impl<W: io::Write> Clock<W> {
         mut term: W,
         center: bool,
         second: bool,
+        military: bool,
     ) -> io::Result<Self> {
         write!(term, "{}", cursor::Hide)?;
         Ok(Clock {
             x, y,
             w, h,
-            date: time::Date::default(),
-            time: time::Time::default(),
+            date: time::Date::blank(),
+            time: time::Time::blank(second, military),
             zone,
             term,
             center,
             second,
+            military,
         })
     }
 
@@ -64,9 +67,9 @@ impl<W: io::Write> Clock<W> {
             self.x = w / 2 - self.width() / 2;
             self.y = h / 2 - self.height() / 2;
         }
-        self.date = time::Date::default();
-        self.time = time::Time::default();
-        write!(self.term, "{}", clear::All)
+        self.date = time::Date::blank();
+        self.time = time::Time::blank(self.second, self.military);
+        write!(self.term, "{}{}", OFF, clear::All)
     }
 
     /// Best effort real-time synchronization.
@@ -78,7 +81,7 @@ impl<W: io::Write> Clock<W> {
 
     pub fn draw(&mut self) -> io::Result<()> {
 
-        let (date, time) = time::now(&self.zone);
+        let (date, time) = time::now(&self.zone, self.second, self.military);
         let draw = self.time ^ time;
 
         for digit in 0..self.digits() {
@@ -115,7 +118,7 @@ impl<W: io::Write> Clock<W> {
     }
 
     fn digits(&self) -> usize {
-        if self.second { 8 } else { 5 }
+        time::Time::width(self.second, self.military)
     }
 
     pub fn width(&self) -> u16 {

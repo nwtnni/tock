@@ -4,58 +4,146 @@ use chrono::prelude::*;
 
 use crate::font;
 
-pub fn now(tz: &Option<chrono_tz::Tz>) -> (Date, Time) {
+pub fn now(
+    tz: &Option<chrono_tz::Tz>,
+    second: bool,
+    military: bool,
+) -> (Date, Time) {
     if let &Some(tz) = tz {
         let dt = chrono::Utc::now().with_timezone(&tz);
         let date = Date::new(&dt, tz.name());
-        let time = Time::new(&dt);
+        let time = Time::new(&dt, second, military);
         (date, time)
     } else {
         let dt = chrono::Local::now();
         let date = Date::new(&dt, "Local");
-        let time = Time::new(&dt);
+        let time = Time::new(&dt, second, military);
         (date, time)
     }
 }
 
-#[derive(Copy, Clone, Debug, Default)]
-pub struct Time([u16; 8]);
+#[derive(Copy, Clone, Debug)]
+pub enum Time {
+    S24([u16; 8]),
+    S12([u16; 11]),
+    M24([u16; 5]),
+    M12([u16; 8]),
+}
 
 impl Time {
-    fn new<T: Timelike>(time: &T) -> Self {
-        let h = time.hour() as usize;
+    pub fn blank(second: bool, military: bool) -> Self {
+        match (second, military) {
+        | (true, true) => Time::S24([0; 8]),
+        | (true, false) => Time::S12([0; 11]),
+        | (false, true) => Time::M24([0; 5]),
+        | (false, false) => Time::M12([0; 8]),
+        }
+    }
+
+    pub fn width(second: bool, military: bool) -> usize {
+        match (second, military) {
+        | (true, true) => 8,
+        | (true, false) => 11,
+        | (false, true) => 5,
+        | (false, false) => 8,
+        }
+    }
+
+    fn new<T: Timelike>(time: &T, second: bool, military: bool) -> Self {
         let m = time.minute() as usize;
-        let s = time.second() as usize;
-        Time([
-             font::DIGIT[h / 10],
-             font::DIGIT[h % 10],
-             font::COLON,
-             font::DIGIT[m / 10],
-             font::DIGIT[m % 10],
-             font::COLON,
-             font::DIGIT[s / 10],
-             font::DIGIT[s % 10],
-        ])
+        match (second, military) {
+        | (true, true) => {
+            let h = time.hour() as usize;
+            let s = time.second() as usize;
+            Time::S24([
+                font::DIGIT[h / 10],
+                font::DIGIT[h % 10],
+                font::COLON,
+                font::DIGIT[m / 10],
+                font::DIGIT[m % 10],
+                font::COLON,
+                font::DIGIT[s / 10],
+                font::DIGIT[s % 10],
+            ])
+        }
+        | (true, false) => {
+            let (pm, h) = time.hour12();
+            let s = time.second() as usize;
+            Time::S12([
+                font::DIGIT[h as usize / 10],
+                font::DIGIT[h as usize % 10],
+                font::COLON, 
+                font::DIGIT[m / 10],
+                font::DIGIT[m % 10],
+                font::COLON,
+                font::DIGIT[s / 10],
+                font::DIGIT[s % 10],
+                font::SPACE,
+                if pm { font::P } else { font::A },
+                font::M,
+            ])
+        }
+        | (false, true) => {
+            let h = time.hour() as usize;
+            Time::M24([
+                font::DIGIT[h / 10],
+                font::DIGIT[h % 10],
+                font::COLON,
+                font::DIGIT[m / 10],
+                font::DIGIT[m % 10],
+            ])
+        }
+        | (false, false) => {
+            let (pm, h) = time.hour12();
+            Time::M12([
+                font::DIGIT[h as usize / 10],
+                font::DIGIT[h as usize % 10],
+                font::COLON,
+                font::DIGIT[m / 10],
+                font::DIGIT[m % 10],
+                font::SPACE,
+                if pm { font::P } else { font::A },
+                font::M,
+            ])
+        }
+        }
     }
 }
 
 impl std::ops::Index<usize> for Time {
     type Output = u16;
     fn index(&self, idx: usize) -> &Self::Output {
-        &self.0[idx]
+        match self {
+        | Time::S24(t) => &t[idx],
+        | Time::S12(t) => &t[idx],
+        | Time::M24(t) => &t[idx],
+        | Time::M12(t) => &t[idx],
+        }
     }
 }
 
 impl std::ops::BitXor for Time {
     type Output = Time;
     fn bitxor(self, rhs: Time) -> Self::Output {
-        let mut time = [0; 8];
-        for i in 0..8 { time[i] = self.0[i] ^ rhs.0[i]; }
-        Time(time)
+        macro_rules! zip {
+            ($time:ident, $l:expr, $r:expr, $len:expr) => { {
+                let mut diff = [0; $len];
+                for i in 0..$len { diff[i] = $l[i] ^ $r[i]; }
+                $time(diff)
+            } }
+        }
+        use Time::*;
+        match (self, rhs) {
+        | (S24(l), S24(r)) => { zip!(S24, l, r, 8) },
+        | (S12(l), S12(r)) => { zip!(S12, l, r, 11) }
+        | (M24(l), M24(r)) => { zip!(M24, l, r, 5) }
+        | (M12(l), M12(r)) => { zip!(M12, l, r, 8) }
+        | (_, _) => S12([font::FILL; 11]),
+        }
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Date {
     pub y: i32,
     pub m: u8,
@@ -64,6 +152,10 @@ pub struct Date {
 }
 
 impl Date {
+    pub fn blank() -> Self {
+        Date { y: 0, m: 0, d: 0, z: "" }
+    }
+
     fn new<D: Datelike>(date: &D, zone: &'static str) -> Date {
         Date {
             y: date.year(),

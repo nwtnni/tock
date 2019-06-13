@@ -5,6 +5,21 @@ pub const H: u16 = 5;
 pub const W: u16 = 3;
 
 // ...
+// ...
+// ...
+// ...
+// ...
+/// Bitmap space character.
+pub const SPACE: u16 = 0b0_000_000_000_000_000;
+
+// xxx
+// xxx
+// xxx
+// xxx
+// xxx
+pub const FILL: u16 = 0b0_111_111_111_111_111;
+
+// ...
 // .x.
 // ...
 // .x.
@@ -20,13 +35,13 @@ pub const COLON: u16 = 0b0_000_010_000_010_000;
 /// Bitmap A character.
 pub const A: u16 = 0b0_010_101_111_101_101;
 
-// xx.
+// xxx
 // x.x
-// xx.
+// xxx
 // x..
 // x..
 /// Bitmap P character.
-pub const P: u16 = 0b0_110_101_110_100_100;
+pub const P: u16 = 0b0_111_101_111_100_100;
 
 // x.x
 // xxx

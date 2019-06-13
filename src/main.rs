@@ -11,6 +11,7 @@ mod view;
 /// A tty-clock clone.
 ///
 /// Displays a digital clock in the terminal.
+/// Defaults to 12-hour local time, no seconds, in the top left corner.
 #[derive(Debug, StructOpt)]
 #[structopt(name = "tock", about = "A tty-clock clone.")]
 struct Opt {
@@ -33,12 +34,16 @@ struct Opt {
     /// Display seconds.
     #[structopt(short = "s", long = "seconds")]
     second: bool,
+
+    /// Display military (24-hour) time.
+    #[structopt(short = "m", long = "military")]
+    military: bool,
     
     /// Center the clock in the terminal. Overrides manual positioning.
     #[structopt(short = "c", long = "center")]
     center: bool,
 
-    /// Change time zone. Defaults to system local time.
+    /// Change time zone.
     ///
     /// Refer to the [Time Zone Database][0] and its [repository][1]
     /// for official time zone names.
@@ -64,6 +69,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         stdout.lock(),
         args.center,
         args.second,
+        args.military,
     )?;
 
     // Draw immediately for responsiveness
