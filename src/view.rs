@@ -26,7 +26,7 @@ const OFF: term::Paint = term::Paint {
 //           ....-..-..
 //           Y    M  S
 #[derive(Clone, Debug)]
-pub struct Clock<W: io::Write> {
+pub struct Clock {
     x: u16,
     y: u16,
     w: u16,
@@ -34,12 +34,11 @@ pub struct Clock<W: io::Write> {
     date: time::Date,
     time: time::Time,
     zone: Option<chrono_tz::Tz>,
-    term: W,
     second: bool,
     military: bool,
 }
 
-impl<W: io::Write> Clock<W> {
+impl Clock {
 
     pub fn start(
         x: u16,
@@ -47,18 +46,15 @@ impl<W: io::Write> Clock<W> {
         w: u16,
         h: u16,
         zone: Option<chrono_tz::Tz>,
-        mut term: W,
         second: bool,
         military: bool,
     ) -> io::Result<Self> {
-        write!(term, "{}", term::HIDE)?;
         Ok(Clock {
             x, y,
             w, h,
             date: time::Date::blank(),
             time: time::Time::blank(second, military),
             zone,
-            term,
             second,
             military,
         })
@@ -69,10 +65,10 @@ impl<W: io::Write> Clock<W> {
         self.y = h / 2 - self.height() / 2;
     }
 
-    pub fn reset(&mut self) -> io::Result<()> {
+    pub fn reset<W: io::Write>(&mut self, mut out: W) -> io::Result<()> {
         self.date = time::Date::blank();
         self.time = time::Time::blank(self.second, self.military);
-        write!(self.term, "{}{}", OFF, term::CLEAR)
+        write!(out, "{}{}", OFF, term::CLEAR)
     }
 
     /// Best effort real-time synchronization.
@@ -82,7 +78,7 @@ impl<W: io::Write> Clock<W> {
         std::thread::sleep(delay);
     }
 
-    pub fn draw(&mut self) -> io::Result<()> {
+    pub fn draw<W: io::Write>(&mut self, mut out: W) -> io::Result<()> {
 
         let (date, time) = time::now(&self.zone, self.second, self.military);
         let draw = self.time ^ time;
@@ -102,7 +98,7 @@ impl<W: io::Write> Clock<W> {
                 let y = i / font::W * self.h + dy;
                 for j in 0..self.h {
                     let goto = term::Move(x, y + j);
-                    write!(self.term, "{}{}{:3$}", color, goto, " ", width)?;
+                    write!(out, "{}{}{:3$}", color, goto, " ", width)?;
                 }
             }
         }
@@ -111,10 +107,10 @@ impl<W: io::Write> Clock<W> {
             let date_x = self.x + self.width() / 2 - date.width() / 2;
             let date_y = self.y + self.height() + 1;
             let goto = term::Move(date_x, date_y);
-            write!(self.term, "{}{}{}", OFF, goto, date)?;
+            write!(out, "{}{}{}", OFF, goto, date)?;
         }
 
-        self.term.flush()?;
+        out.flush()?;
         self.date = date;
         self.time = time;
         Ok(())
@@ -133,15 +129,3 @@ impl<W: io::Write> Clock<W> {
     }
 }
 
-impl<W: io::Write> Drop for Clock<W> {
-    fn drop(&mut self) {
-        write!(
-            self.term,
-            "{}{}{}{}",
-            OFF,
-            term::CLEAR,
-            term::SHOW,
-            term::Move::default(),
-        ).ok();
-    }
-}

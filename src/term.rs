@@ -1,5 +1,6 @@
 use std::fmt;
 use std::io;
+use std::io::Write;
 use std::mem;
 
 /// Clear the screen.
@@ -10,6 +11,8 @@ pub const HIDE: &'static str = "\x1B[?25l";
 
 /// Show the cursor.
 pub const SHOW: &'static str = "\x1B[?25h";
+
+pub const RESET: &'static str = "\x1B[0m";
 
 /// Non-canonical mode terminal.
 pub struct Term<'main> {
@@ -34,7 +37,7 @@ impl<'main> Term<'main> {
             }
 
             // Hold onto stdout lock
-            let out = stdout.lock();
+            let mut out = stdout.lock();
 
             // Retrieve previous termios settings
             let mut ios: libc::termios = mem::zeroed();
@@ -46,6 +49,8 @@ impl<'main> Term<'main> {
             set.c_cc[libc::VMIN] = 0;
             set.c_cc[libc::VTIME] = 0;
             test!(libc::tcsetattr(libc::STDIN_FILENO, libc::TCSANOW, &set));
+
+            write!(out, "{}", HIDE)?;
 
             Ok(Term { ios, out })
         }
@@ -72,6 +77,7 @@ impl<'main> io::Write for Term<'main> {
 impl<'main> Drop for Term<'main> {
     fn drop(&mut self) {
         unsafe {
+            write!(self.out, "{}{}{}{}", RESET, CLEAR, Move::default(), SHOW).ok();
             libc::tcsetattr(libc::STDIN_FILENO, libc::TCSANOW, &self.ios);
         }
     }
