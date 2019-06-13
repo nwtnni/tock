@@ -1,3 +1,9 @@
+//! All characters are stored in the lower 15 bits of u16 integers.
+//!
+//! After the most significant dummy bit, the bitmaps are layed
+//! out as 5x3 grids, starting from the top left and running across
+//! in rows until the least significant bit at the bottom right.
+
 /// Height of a single character in bits.
 pub const H: u16 = 5;
 
@@ -9,7 +15,7 @@ pub const W: u16 = 3;
 // ...
 // ...
 // ...
-/// Bitmap space character.
+/// Bitmap ' ' character.
 pub const SPACE: u16 = 0b0_000_000_000_000_000;
 
 // xxx
@@ -17,6 +23,7 @@ pub const SPACE: u16 = 0b0_000_000_000_000_000;
 // xxx
 // xxx
 // xxx
+/// Completely filled in character for masking.
 pub const FILL: u16 = 0b0_111_111_111_111_111;
 
 // ...
@@ -24,7 +31,7 @@ pub const FILL: u16 = 0b0_111_111_111_111_111;
 // ...
 // .x.
 // ...
-/// Bitmap colon character.
+/// Bitmap ':' character.
 pub const COLON: u16 = 0b0_000_010_000_010_000;
 
 // .x.
@@ -32,7 +39,7 @@ pub const COLON: u16 = 0b0_000_010_000_010_000;
 // xxx
 // x.x
 // x.x
-/// Bitmap A character.
+/// Bitmap 'A' character.
 pub const A: u16 = 0b0_010_101_111_101_101;
 
 // xxx
@@ -40,7 +47,7 @@ pub const A: u16 = 0b0_010_101_111_101_101;
 // xxx
 // x..
 // x..
-/// Bitmap P character.
+/// Bitmap 'P' character.
 pub const P: u16 = 0b0_111_101_111_100_100;
 
 // x.x
@@ -48,10 +55,10 @@ pub const P: u16 = 0b0_111_101_111_100_100;
 // x.x
 // x.x
 // x.x
-/// Bitmap M character.
+/// Bitmap 'M' character.
 pub const M: u16 = 0b0_101_111_101_101_101;
 
-/// Bitmap digit font. Uses lower 15 bits to store each 5x3 digit.
+/// Bitmap digits from '0' - '9'.
 pub const DIGIT: [u16; 10] = [
     // xxx
     // x.x
