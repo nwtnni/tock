@@ -10,14 +10,6 @@ pub const H: u16 = 5;
 /// Width of a single character in bits.
 pub const W: u16 = 3;
 
-// ...
-// ...
-// ...
-// ...
-// ...
-/// Bitmap ' ' character.
-pub const SPACE: u16 = 0b0_000_000_000_000_000;
-
 // xxx
 // xxx
 // xxx
@@ -33,6 +25,14 @@ pub const FILL: u16 = 0b0_111_111_111_111_111;
 // ...
 /// Bitmap ':' character.
 pub const COLON: u16 = 0b0_000_010_000_010_000;
+
+// ...
+// ...
+// ...
+// ...
+// ...
+/// Bitmap ' ' character.
+pub const SPACE: u16 = 0b0_000_000_000_000_000;
 
 // .x.
 // x.x
@@ -67,12 +67,12 @@ pub const DIGIT: [u16; 10] = [
     // xxx
     0b0_111_101_101_101_111,
 
-    // ..x
-    // ..x
-    // ..x
-    // ..x
-    // ..x
-    0b0_001_001_001_001_001,
+    // .x.
+    // xx.
+    // .x.
+    // .x.
+    // xxx
+    0b0_010_110_010_010_111,
 
     // xxx
     // ..x
@@ -127,6 +127,6 @@ pub const DIGIT: [u16; 10] = [
     // x.x
     // xxx
     // ..x
-    // ..x
-    0b0_111_101_111_001_001,
+    // xxx
+    0b0_111_101_111_001_111,
 ];
