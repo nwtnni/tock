@@ -117,7 +117,7 @@ impl std::ops::BitXor for Time {
         | (S12(l), S12(r)) => { zip!(S12, l, r, 11) }
         | (M24(l), M24(r)) => { zip!(M24, l, r, 5) }
         | (M12(l), M12(r)) => { zip!(M12, l, r, 8) }
-        | (_, _) => S12([font::FILL; 11]),
+        | (_, _) => unreachable!(),
         }
     }
 }
