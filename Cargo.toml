@@ -7,7 +7,6 @@ edition = "2018"
 [dependencies]
 chrono = "0.4.6"
 chrono-tz = "0.5.1"
-signal-hook = "0.1.9"
 structopt = "0.2.16"
 libc = "0.2.58"
 

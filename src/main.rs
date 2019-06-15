@@ -1,6 +1,5 @@
 use std::error;
 use std::io;
-use std::sync;
 use std::sync::atomic;
 
 use structopt::StructOpt;
@@ -56,20 +55,36 @@ struct Opt {
     zone: Option<chrono_tz::Tz>,
 }
 
+static FINISH: atomic::AtomicBool = atomic::AtomicBool::new(false);
+static RESIZE: atomic::AtomicBool = atomic::AtomicBool::new(false);
+
+extern "C" fn set_finish(_: libc::c_int) {
+    FINISH.store(true, atomic::Ordering::Relaxed)
+}
+
+extern "C" fn set_resize(_: libc::c_int) {
+    RESIZE.store(true, atomic::Ordering::Relaxed)
+}
+
 fn main() -> Result<(), Box<dyn error::Error>> {
+
+    unsafe {
+        macro_rules! test {
+            ($call:expr) => {
+                if $call == libc::SIG_ERR {
+                    return Err(Box::new(io::Error::last_os_error()))
+                }
+            }
+        }
+        test!(libc::signal(libc::SIGINT, set_finish as _));
+        test!(libc::signal(libc::SIGTERM, set_finish as _));
+        test!(libc::signal(libc::SIGWINCH, set_resize as _));
+    }
 
     let args = Opt::from_args();
     let mut stdin = io::stdin();
     let mut stdout = io::stdout();
     let mut term = term::Term::new(&mut stdin, &mut stdout)?;
-
-    let finish = sync::Arc::<atomic::AtomicBool>::default();
-    let resize = sync::Arc::<atomic::AtomicBool>::default();
-
-    signal_hook::flag::register(signal_hook::SIGINT, finish.clone())?;
-    signal_hook::flag::register(signal_hook::SIGTERM, finish.clone())?;
-    signal_hook::flag::register(signal_hook::SIGWINCH, resize.clone())?;
-
     let mut clock = view::Clock::start(
         args.x,
         args.y,
@@ -86,12 +101,12 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     clock.reset(&mut term)?;
     clock.draw(&mut term)?;
 
-    'main: while !finish.load(atomic::Ordering::Relaxed) {
+    'main: while !FINISH.load(atomic::Ordering::Relaxed) {
 
         let mut dirty = false;
 
-        if resize.load(atomic::Ordering::Relaxed) {
-            resize.store(false, atomic::Ordering::Relaxed);
+        if RESIZE.load(atomic::Ordering::Relaxed) {
+            RESIZE.store(false, atomic::Ordering::Relaxed);
             size = term.size()?;
             dirty = true;
         }
