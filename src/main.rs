@@ -9,6 +9,12 @@ mod term;
 mod time;
 mod view;
 
+#[cfg(feature = "timezone")]
+pub use chrono_tz as zone;
+
+#[cfg(not(feature = "timezone"))]
+mod zone;
+
 /// A tty-clock clone.
 ///
 /// Displays a digital clock in the terminal.
@@ -52,7 +58,7 @@ struct Opt {
     /// [0]: http://www.iana.org/time-zones
     /// [1]: https://github.com/eggert/tz
     #[structopt(short = "z", long = "timezone")]
-    zone: Option<chrono_tz::Tz>,
+    zone: Option<zone::Tz>,
 }
 
 static FINISH: atomic::AtomicBool = atomic::AtomicBool::new(false);

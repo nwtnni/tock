@@ -5,6 +5,7 @@ use chrono::Timelike;
 use crate::font;
 use crate::term;
 use crate::time;
+use crate::zone;
 
 const ON: term::Paint = term::Paint {
     color: term::Color::ANSI(term::ANSI::Blue),
@@ -33,7 +34,7 @@ pub struct Clock {
     h: u16,
     date: time::Date,
     time: time::Time,
-    zone: Option<chrono_tz::Tz>,
+    zone: Option<zone::Tz>,
     second: bool,
     military: bool,
 }
@@ -45,7 +46,7 @@ impl Clock {
         y: u16,
         w: u16,
         h: u16,
-        zone: Option<chrono_tz::Tz>,
+        zone: Option<zone::Tz>,
         second: bool,
         military: bool,
     ) -> io::Result<Self> {

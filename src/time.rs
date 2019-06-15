@@ -3,8 +3,9 @@ use std::fmt;
 use chrono::prelude::*;
 
 use crate::font;
+use crate::zone;
 
-pub fn now(tz: &Option<chrono_tz::Tz>, second: bool, military: bool) -> (Date, Time) {
+pub fn now(tz: &Option<zone::Tz>, second: bool, military: bool) -> (Date, Time) {
     if let &Some(tz) = tz {
         let dt = chrono::Utc::now().with_timezone(&tz);
         let date = Date::new(&dt, tz.name());
