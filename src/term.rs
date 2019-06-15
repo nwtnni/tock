@@ -68,7 +68,7 @@ impl<'main> Term<'main> {
         unsafe {
             let mut size: libc::winsize = mem::zeroed();
             test!(libc::ioctl(libc::STDIN_FILENO, libc::TIOCGWINSZ.into(), &mut size));
-            Ok((size.ws_col as u16, size.ws_row as u16))
+            Ok((size.ws_col, size.ws_row))
         }
     }
 
