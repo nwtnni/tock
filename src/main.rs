@@ -117,6 +117,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             dirty = true;
         }
 
+        #[cfg(feature = "interactive")]
         while let Some(c) = term.poll() {
             match c {
             | 'q' | 'Q' | '\x1B' => break 'main,

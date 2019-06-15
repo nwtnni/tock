@@ -5,7 +5,8 @@ authors = ["Newton Ni <nwtnni@gmail.com>"]
 edition = "2018"
 
 [features]
-default = ["timezone"]
+default = ["interactive", "timezone"]
+interactive = []
 timezone = ["chrono-tz"]
 
 [dependencies]
