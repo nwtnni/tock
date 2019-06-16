@@ -49,7 +49,7 @@ impl<'tz> Clock<'tz> {
         Ok(Clock {
             x, y,
             w, h,
-            date: time::Date::blank(),
+            date: time::Date::default(),
             time: time::Time::blank(second, military),
             zone,
             color: term::Paint { color, ground: term::Ground::Back },
@@ -72,7 +72,7 @@ impl<'tz> Clock<'tz> {
     }
 
     pub fn reset<W: io::Write>(&mut self, mut out: W) -> io::Result<()> {
-        self.date = time::Date::blank();
+        self.date = time::Date::default();
         self.time = time::Time::blank(self.second, self.military);
         write!(out, "{}{}", RESET, term::CLEAR)
     }

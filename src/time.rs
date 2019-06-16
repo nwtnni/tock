@@ -115,7 +115,7 @@ impl std::ops::BitXor for Time {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct Date<'tz> {
     pub y: i32,
     pub m: u8,
@@ -124,10 +124,6 @@ pub struct Date<'tz> {
 }
 
 impl<'tz> Date<'tz> {
-    pub fn blank() -> Self {
-        Date { y: 0, m: 0, d: 0, z: "" }
-    }
-
     fn new<D: Datelike>(date: &D, zone: &'tz str) -> Date<'tz> {
         Date {
             y: date.year(),
