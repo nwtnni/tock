@@ -66,6 +66,10 @@ impl<'tz> Clock<'tz> {
         self.military = !self.military;
     }
 
+    pub fn set_color(&mut self, color: term::Color) {
+        self.color = term::Paint { color, ground: term::Ground::Back };
+    }
+
     pub fn center(&mut self, (w, h): (u16, u16)) {
         self.x = w / 2 - self.width() / 2;
         self.y = h / 2 - self.height() / 2;

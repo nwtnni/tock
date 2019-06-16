@@ -133,16 +133,21 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             | 'q' | 'Q' | '\x1B' => break 'main,
             | 's' => { dirty = true; clock.toggle_second(); }
             | 'm' => { dirty = true; clock.toggle_military(); }
+            | '0' ..= '7' => {
+                dirty = true; 
+                clock.set_color(term::Color::C8(term::C8(c as u8 - 48)));
+            }
             | _ => (),
             }
         }
 
-        clock.sync();
-
         if dirty {
             if args.center { clock.center(size) }
             clock.reset(&mut term)?;
+            clock.draw(&mut term)?;
         }
+
+        clock.sync();
 
         clock.draw(&mut term)?;
     }
