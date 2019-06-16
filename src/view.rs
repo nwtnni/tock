@@ -30,6 +30,7 @@ pub struct Clock<'tz> {
     time: time::Time,
     zone: &'tz str,
     color: term::Paint,
+    center: bool,
     second: bool,
     military: bool,
 }
@@ -43,6 +44,7 @@ impl<'tz> Clock<'tz> {
         h: u16,
         zone: &'tz str,
         color: term::Color,
+        center: bool,
         second: bool,
         military: bool,
     ) -> io::Result<Self> {
@@ -53,26 +55,29 @@ impl<'tz> Clock<'tz> {
             time: time::Time::blank(second, military),
             zone,
             color: term::Paint { color, ground: term::Ground::Back },
+            center,
             second,
             military,
         })
     }
 
     pub fn toggle_second(&mut self) {
-        self.second = !self.second;
+        self.second ^= true;
     }
 
     pub fn toggle_military(&mut self) {
-        self.military = !self.military;
+        self.military ^= true;
     }
 
     pub fn set_color(&mut self, color: term::Color) {
         self.color = term::Paint { color, ground: term::Ground::Back };
     }
 
-    pub fn center(&mut self, (w, h): (u16, u16)) {
-        self.x = w / 2 - self.width() / 2;
-        self.y = h / 2 - self.height() / 2;
+    pub fn resize(&mut self, (w, h): (u16, u16)) {
+        if self.center {
+            self.x = w / 2 - self.width() / 2;
+            self.y = h / 2 - self.height() / 2;
+        }
     }
 
     pub fn reset<W: io::Write>(&mut self, mut out: W) -> io::Result<()> {

@@ -108,13 +108,14 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             .map(String::as_str)
             .unwrap_or("Local"),
         args.color,
+        args.center,
         args.second,
         args.military,
     )?;
 
     // Draw immediately for responsiveness
     let mut size = term.size()?;
-    if args.center { clock.center(size) }
+    clock.resize(size);
     clock.reset(&mut term)?;
     clock.draw(&mut term)?;
 
@@ -125,6 +126,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         if RESIZE.load(atomic::Ordering::Relaxed) {
             RESIZE.store(false, atomic::Ordering::Relaxed);
             size = term.size()?;
+            clock.resize(size);
             dirty = true;
         }
 
@@ -143,13 +145,11 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         }
 
         if dirty {
-            if args.center { clock.center(size) }
             clock.reset(&mut term)?;
             clock.draw(&mut term)?;
         }
 
         clock.sync();
-
         clock.draw(&mut term)?;
     }
 
