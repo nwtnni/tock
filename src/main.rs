@@ -52,12 +52,24 @@ struct Opt {
     #[structopt(short = "c", long = "center")]
     center: bool,
 
+    /// Change the color of the time.
+    ///
+    /// Accepts either a [single 8-bit number][0] or three
+    /// comma-separated 8-bit numbers in R,G,B format. Does
+    /// not check if your terminal supports the entire range of
+    /// 8-bit or 24-bit colors.
+    ///
+    /// [0]: https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
+    #[structopt(short = "C", long = "color", default_value = "2")]
+    color: term::Color,
+
     /// Change time zone.
     ///
     /// Refer to the [Time Zone Database][0] and its [repository][1]
     /// for official time zone names.
     ///
     /// [0]: http://www.iana.org/time-zones
+    ///
     /// [1]: https://github.com/eggert/tz
     #[structopt(short = "z", long = "timezone")]
     zone: Option<zone::Tz>,
@@ -107,6 +119,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         args.w,
         args.h,
         args.zone,
+        args.color,
         args.second,
         args.military,
     )?;

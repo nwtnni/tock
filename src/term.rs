@@ -1,8 +1,7 @@
 use std::fmt;
-use std::io;
-use std::io::Read;
-use std::io::Write;
+use std::io::{self, Read, Write};
 use std::mem;
+use std::str;
 
 /// Clear the screen.
 pub const CLEAR: &'static str = "\x1B[2J";
@@ -119,15 +118,15 @@ impl fmt::Display for Paint {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let g = self.ground as u8;
         match self.color {
-        | Color::ANSI(c) => write!(fmt, "\x1B[{};5;{}m", g, c as u8),
-        | Color::C256(c) => write!(fmt, "\x1B[{};5;{}m", g, c.0),
-        | Color::CRGB(c) => write!(fmt, "\x1B[{};2;{};{};{}m", g, c.r, c.g, c.b),
+        | Color::C8(c) => write!(fmt, "\x1B[{};5;{}m", g, c.0),
+        | Color::C24(c) => write!(fmt, "\x1B[{};2;{};{};{}m", g, c.r, c.g, c.b),
         | Color::Reset => write!(fmt, "\x1B[{}m", g + 1),
         }
     }
 }
 
 #[repr(u8)]
+#[allow(dead_code)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Ground {
     Fore = 38,
@@ -136,38 +135,38 @@ pub enum Ground {
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Color {
-    ANSI(ANSI),
-    C256(C256),
-    CRGB(CRGB),
+    C8(C8),
+    C24(C24),
     Reset,
 }
 
-#[repr(u8)]
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum ANSI {
-    Black         = 00,
-    Red           = 01,
-    Green         = 02,
-    Yellow        = 03,
-    Blue          = 04,
-    Magenta       = 05,
-    Cyan          = 06,
-    White         = 07,
-    BrightBlack   = 08,
-    BrightRed     = 09,
-    BrightGreen   = 10,
-    BrightYellow  = 11,
-    BrightBlue    = 12,
-    BrightMagenta = 13,
-    BrightCyan    = 14,
-    BrightWhite   = 15,
+impl str::FromStr for Color {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if let Ok(c) = s.parse::<u8>() {
+            return Ok(Color::C8(C8(c)))
+        }
+
+        let mut it = s.split(',');
+
+        let (r, g, b) = match (it.next(), it.next(), it.next(), it.next()) {
+        | (Some(r), Some(g), Some(b), None) => (r, g, b),
+        | _ => return Err(format!("[USER ERROR]: invalid color specifier {}", s))
+        };
+
+        match (r.parse::<u8>(), g.parse::<u8>(), b.parse::<u8>()) {
+        | (Ok(r), Ok(g), Ok(b)) => Ok(Color::C24(C24 { r, g, b })),
+        | _ => return Err(format!("[USER ERROR]: invalid color specifier {}", s))
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct C256(pub u8);
+pub struct C8(pub u8);
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct CRGB {
+pub struct C24 {
     pub r: u8,
     pub g: u8,
     pub b: u8,

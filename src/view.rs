@@ -7,12 +7,7 @@ use crate::term;
 use crate::time;
 use crate::zone;
 
-const ON: term::Paint = term::Paint {
-    color: term::Color::ANSI(term::ANSI::Blue),
-    ground: term::Ground::Back,
-};
-
-const OFF: term::Paint = term::Paint {
+const RESET: term::Paint = term::Paint {
     color: term::Color::Reset,
     ground: term::Ground::Back,
 };
@@ -35,6 +30,7 @@ pub struct Clock {
     date: time::Date,
     time: time::Time,
     zone: Option<zone::Tz>,
+    color: term::Paint,
     second: bool,
     military: bool,
 }
@@ -47,6 +43,7 @@ impl Clock {
         w: u16,
         h: u16,
         zone: Option<zone::Tz>,
+        color: term::Color,
         second: bool,
         military: bool,
     ) -> io::Result<Self> {
@@ -56,6 +53,7 @@ impl Clock {
             date: time::Date::blank(),
             time: time::Time::blank(second, military),
             zone,
+            color: term::Paint { color, ground: term::Ground::Back },
             second,
             military,
         })
@@ -77,7 +75,7 @@ impl Clock {
     pub fn reset<W: io::Write>(&mut self, mut out: W) -> io::Result<()> {
         self.date = time::Date::blank();
         self.time = time::Time::blank(self.second, self.military);
-        write!(out, "{}{}", OFF, term::CLEAR)
+        write!(out, "{}{}", RESET, term::CLEAR)
     }
 
     /// Best effort real-time synchronization.
@@ -101,7 +99,7 @@ impl Clock {
 
             for i in 0..15 {
                 mask >>= 1; if draw[digit] & mask == 0 { continue }
-                let color = if time[digit] & mask > 0 { ON } else { OFF };
+                let color = if time[digit] & mask > 0 { self.color } else { RESET };
                 let width = self.w as usize;
                 let x = i % font::W * self.w + dx;
                 let y = i / font::W * self.h + dy;
@@ -116,7 +114,7 @@ impl Clock {
             let date_x = self.x + self.width() / 2 - date.width() / 2;
             let date_y = self.y + self.height() + 1;
             let goto = term::Move(date_x, date_y);
-            write!(out, "{}{}{}", OFF, goto, date)?;
+            write!(out, "{}{}{}", RESET, goto, date)?;
         }
 
         out.flush()?;
