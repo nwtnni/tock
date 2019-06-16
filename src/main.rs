@@ -1,5 +1,7 @@
 use std::error;
 use std::io;
+use std::mem;
+use std::ptr;
 use std::sync::atomic;
 
 use structopt::StructOpt;
@@ -72,19 +74,27 @@ extern "C" fn set_resize(_: libc::c_int) {
     RESIZE.store(true, atomic::Ordering::Relaxed)
 }
 
+macro_rules! test {
+    ($call:expr) => {
+        if $call != 0 {
+            return Err(Box::new(io::Error::last_os_error()))
+        }
+    }
+}
+
 fn main() -> Result<(), Box<dyn error::Error>> {
 
     unsafe {
-        macro_rules! test {
-            ($call:expr) => {
-                if $call == libc::SIG_ERR {
-                    return Err(Box::new(io::Error::last_os_error()))
-                }
-            }
-        }
-        test!(libc::signal(libc::SIGINT, set_finish as _));
-        test!(libc::signal(libc::SIGTERM, set_finish as _));
-        test!(libc::signal(libc::SIGWINCH, set_resize as _));
+        let mut action: libc::sigaction = mem::zeroed();
+        action.sa_flags |= libc::SA_RESTART;
+        test!(libc::sigemptyset(&mut action.sa_mask as _));
+
+        let finish = libc::sigaction { sa_sigaction: set_finish as _, .. action };
+        let resize = libc::sigaction { sa_sigaction: set_resize as _, .. action };
+
+        test!(libc::sigaction(libc::SIGINT, &finish, ptr::null::<libc::sigaction>() as _));
+        test!(libc::sigaction(libc::SIGTERM, &finish, ptr::null::<libc::sigaction>() as _));
+        test!(libc::sigaction(libc::SIGWINCH, &resize, ptr::null::<libc::sigaction>() as _));
     }
 
     let args = Opt::from_args();
