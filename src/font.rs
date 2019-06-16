@@ -10,14 +10,6 @@ pub const H: u16 = 5;
 /// Width of a single character in bits.
 pub const W: u16 = 3;
 
-// xxx
-// xxx
-// xxx
-// xxx
-// xxx
-/// Completely filled in character for masking.
-pub const FILL: u16 = 0b0_111_111_111_111_111;
-
 // ...
 // .x.
 // ...
