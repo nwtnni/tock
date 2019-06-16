@@ -5,7 +5,6 @@ use chrono::Timelike;
 use crate::font;
 use crate::term;
 use crate::time;
-use crate::zone;
 
 const RESET: term::Paint = term::Paint {
     color: term::Color::Reset,
@@ -22,27 +21,27 @@ const RESET: term::Paint = term::Paint {
 //           ....-..-..
 //           Y    M  S
 #[derive(Clone, Debug)]
-pub struct Clock {
+pub struct Clock<'tz> {
     x: u16,
     y: u16,
     w: u16,
     h: u16,
-    date: time::Date,
+    date: time::Date<'tz>,
     time: time::Time,
-    zone: Option<zone::Tz>,
+    zone: &'tz str,
     color: term::Paint,
     second: bool,
     military: bool,
 }
 
-impl Clock {
+impl<'tz> Clock<'tz> {
 
     pub fn start(
         x: u16,
         y: u16,
         w: u16,
         h: u16,
-        zone: Option<zone::Tz>,
+        zone: &'tz str,
         color: term::Color,
         second: bool,
         military: bool,

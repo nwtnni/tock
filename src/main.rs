@@ -1,3 +1,4 @@
+use std::env;
 use std::error;
 use std::io;
 use std::mem;
@@ -10,12 +11,6 @@ mod font;
 mod term;
 mod time;
 mod view;
-
-#[cfg(feature = "timezone")]
-pub use chrono_tz as zone;
-
-#[cfg(not(feature = "timezone"))]
-mod zone;
 
 /// A tty-clock clone.
 ///
@@ -62,17 +57,6 @@ struct Opt {
     /// [0]: https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
     #[structopt(short = "C", long = "color", default_value = "2")]
     color: term::Color,
-
-    /// Change time zone.
-    ///
-    /// Refer to the [Time Zone Database][0] and its [repository][1]
-    /// for official time zone names.
-    ///
-    /// [0]: http://www.iana.org/time-zones
-    ///
-    /// [1]: https://github.com/eggert/tz
-    #[structopt(short = "z", long = "timezone")]
-    zone: Option<zone::Tz>,
 }
 
 static FINISH: atomic::AtomicBool = atomic::AtomicBool::new(false);
@@ -110,6 +94,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     }
 
     let args = Opt::from_args();
+    let zone = env::var("TZ");
     let mut stdin = io::stdin();
     let mut stdout = io::stdout();
     let mut term = term::Term::new(&mut stdin, &mut stdout)?;
@@ -118,7 +103,9 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         args.y,
         args.w,
         args.h,
-        args.zone,
+        zone.as_ref()
+            .map(String::as_str)
+            .unwrap_or("Local"),
         args.color,
         args.second,
         args.military,

@@ -3,20 +3,12 @@ use std::fmt;
 use chrono::prelude::*;
 
 use crate::font;
-use crate::zone;
 
-pub fn now(tz: &Option<zone::Tz>, second: bool, military: bool) -> (Date, Time) {
-    if let &Some(tz) = tz {
-        let dt = chrono::Utc::now().with_timezone(&tz);
-        let date = Date::new(&dt, tz.name());
-        let time = Time::new(&dt, second, military);
-        (date, time)
-    } else {
-        let dt = chrono::Local::now();
-        let date = Date::new(&dt, "Local");
-        let time = Time::new(&dt, second, military);
-        (date, time)
-    }
+pub fn now(tz: &str, second: bool, military: bool) -> (Date, Time) {
+    let dt = chrono::Local::now();
+    let date = Date::new(&dt, tz);
+    let time = Time::new(&dt, second, military);
+    (date, time)
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -124,19 +116,19 @@ impl std::ops::BitXor for Time {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Date {
+pub struct Date<'tz> {
     pub y: i32,
     pub m: u8,
     pub d: u8,
-    pub z: &'static str,
+    pub z: &'tz str,
 }
 
-impl Date {
+impl<'tz> Date<'tz> {
     pub fn blank() -> Self {
         Date { y: 0, m: 0, d: 0, z: "" }
     }
 
-    fn new<D: Datelike>(date: &D, zone: &'static str) -> Date {
+    fn new<D: Datelike>(date: &D, zone: &'tz str) -> Date<'tz> {
         Date {
             y: date.year(),
             m: date.month() as u8,
@@ -150,7 +142,7 @@ impl Date {
     }
 }
 
-impl fmt::Display for Date {
+impl<'tz> fmt::Display for Date<'tz> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         write!(fmt, "{:4}-{:02}-{:02} | {}", self.y, self.m, self.d, self.z)
     }
