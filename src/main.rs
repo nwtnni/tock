@@ -12,12 +12,11 @@ mod term;
 mod time;
 mod view;
 
-/// A tty-clock clone.
+/// A digital clock for the terminal, inspired by tty-clock.
 ///
-/// Displays a digital clock in the terminal.
 /// Defaults to 12-hour local time, no seconds, in the top left corner.
 #[derive(Debug, StructOpt)]
-#[structopt(name = "tock", about = "A tty-clock clone.")]
+#[structopt(name = "tock", about = "A digital clock for the terminal.")]
 struct Opt {
     /// Horizontal 0-indexed position of top-left corner.
     #[structopt(short = "x", long = "x", default_value = "1")]
@@ -134,8 +133,16 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         while let Some(c) = term.poll() {
             match c {
             | 'q' | 'Q' | '\x1B' => break 'main,
-            | 's' => { dirty = true; clock.toggle_second(); }
-            | 'm' => { dirty = true; clock.toggle_military(); }
+            | 's' => {
+                dirty = true;
+                clock.toggle_second();
+                clock.resize(size);
+            }
+            | 'm' => {
+                dirty = true;
+                clock.toggle_military();
+                clock.resize(size);
+            }
             | '0' ..= '7' => {
                 dirty = true; 
                 clock.set_color(term::Color::C8(term::C8(c as u8 - 48)));
