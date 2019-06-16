@@ -87,10 +87,11 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
         let finish = libc::sigaction { sa_sigaction: set_finish as _, .. action };
         let resize = libc::sigaction { sa_sigaction: set_resize as _, .. action };
+        let null = ptr::null::<libc::sigaction>() as _;
 
-        test!(libc::sigaction(libc::SIGINT, &finish, ptr::null::<libc::sigaction>() as _));
-        test!(libc::sigaction(libc::SIGTERM, &finish, ptr::null::<libc::sigaction>() as _));
-        test!(libc::sigaction(libc::SIGWINCH, &resize, ptr::null::<libc::sigaction>() as _));
+        test!(libc::sigaction(libc::SIGINT, &finish, null));
+        test!(libc::sigaction(libc::SIGTERM, &finish, null));
+        test!(libc::sigaction(libc::SIGWINCH, &resize, null));
     }
 
     let args = Opt::from_args();
