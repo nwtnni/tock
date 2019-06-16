@@ -72,10 +72,9 @@ impl<'main> Term<'main> {
     }
 
     pub fn poll(&mut self) -> Option<char> {
-        if let Ok(_) = self.stdin.read_exact(&mut self.buffer) {
-            Some(self.buffer[0] as char)
-        } else {
-            None
+        match self.stdin.read_exact(&mut self.buffer) {
+        | Ok(_) => Some(self.buffer[0] as char),
+        | Err(_) => None,
         }
     }
 }
