@@ -5,6 +5,12 @@ use std::cell;
 /// Clear the screen.
 pub const CLEAR: &'static str = "\x1B[2J";
 
+/// Switch to main screen buffer.
+pub const MAIN: &'static str = "\x1B[?1049l";
+
+/// Switch to alternate screen buffer.
+pub const ALTERNATE: &'static str = "\x1B[?1049h";
+
 /// Hide the cursor.
 pub const HIDE: &'static str = "\x1B[?25l";
 

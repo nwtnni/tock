@@ -50,7 +50,8 @@ USAGE:
 
 FLAGS:
     -c, --center
-            Center the clock in the terminal. Overrides manual positioning.
+            Center the clock in the terminal.
+            Overrides manual positioning.
 
         --help
             Prints help information
@@ -69,23 +70,25 @@ OPTIONS:
     -C, --color <color>
             Change the color of the time.
 
-            Accepts either a [single 8-bit number][0] or three comma-separated
-            8-bit numbers in R,G,B format. Does not check if your terminal supports
-            the entire range of 8-bit or 24-bit colors.
+            Accepts either a [single 8-bit number][0] or
+            three comma-separated 8-bit numbers in R,G,B format.
+            Does not check if your terminal supports the
+            entire range of 8-bit or 24-bit colors.
 
             [0]: https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
-            
+
             [default: 2]
 
     -f, --format <format>
             Change the date format.
 
-            Accepts a format string using [strftime][0] notation. Note that
-            occurrences of the `%Z` specifier are naively replaced with the contents
-            of the `TZ` environment variable, or the string "Local" if `TZ` is not set.
+            Accepts a format string using [strftime][0] notation.
+            Note that occurrences of the `%Z` specifier are
+            naively replaced with the contents of the `TZ` environment
+            variable, or the string "Local" if `TZ` is not set.
 
             [0]: https://docs.rs/chrono/0.4.6/chrono/format/strftime/index.html
-            
+
             [default: %F | %Z]
 
     -h, --height <h>
@@ -95,7 +98,9 @@ OPTIONS:
             Font width in characters per tile. [default: 2]
 
     -x, --x <x>
-            Horizontal 0-indexed position of top-left corner. [default: 1]
+            Horizontal 0-indexed position of top-left corner.
+
+            [default: 1]
 
     -y, --y <y>
 ```
@@ -110,6 +115,9 @@ feature flag set are:
 - `0`..=`7`: Change to corresponding ANSI color.
 
 ## Changelog
+
+- 0.1.3
+  * Draw clock to alternate screen buffer to avoid clearing user information. Thanks [@Canop][8]!
 
 - 0.1.2
   * Fix README formatting (oops).
@@ -138,3 +146,4 @@ feature flag set are:
 [5]: http://www.unixwiz.net/techtips/termios-vmin-vtime.html
 [6]: https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html
 [7]: https://github.com/johnthagen/min-sized-rust
+[8]: https://github.com/Canop

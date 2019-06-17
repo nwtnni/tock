@@ -50,7 +50,7 @@ impl<'main> Term<'main> {
         // Hold onto locks
         let stdin = stdin.lock();
         let mut stdout = stdout.lock();
-        write!(stdout, "{}", brush::HIDE)?;
+        write!(stdout, "{}{}", brush::ALTERNATE, brush::HIDE)?;
         Ok(Term { termios, stdin, stdout, buffer: [0] })
     }
 
@@ -91,9 +91,9 @@ impl<'main> Drop for Term<'main> {
                 self.stdout,
                 "{}{}{}{}",
                 brush::RESET,
-                brush::CLEAR,
+                brush::SHOW,
                 brush::Move::default(),
-                brush::SHOW
+                brush::MAIN,
             ).ok();
         }
     }
