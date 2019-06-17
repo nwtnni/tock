@@ -122,7 +122,6 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let mut size = term.size()?;
     clock.resize(size);
     clock.reset(&mut term)?;
-    clock.draw(&mut term)?;
 
     'main: while !FINISH.load(atomic::Ordering::Relaxed) {
 
@@ -130,9 +129,9 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
         if RESIZE.load(atomic::Ordering::Relaxed) {
             RESIZE.store(false, atomic::Ordering::Relaxed);
+            dirty = true;
             size = term.size()?;
             clock.resize(size);
-            dirty = true;
         }
 
         #[cfg(feature = "interactive")]
@@ -157,13 +156,9 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             }
         }
 
-        if dirty {
-            clock.reset(&mut term)?;
-            clock.draw(&mut term)?;
-        }
-
+        if dirty { clock.reset(&mut term)?; }
         clock.sync();
-        clock.draw(&mut term)?;
+        clock.update(&mut term)?;
     }
 
     Ok(())

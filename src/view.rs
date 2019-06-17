@@ -1,4 +1,5 @@
 use std::io;
+use std::fmt::Write;
 
 use chrono::Timelike;
 
@@ -35,6 +36,7 @@ pub struct Clock<'tz> {
     center: bool,
     second: bool,
     military: bool,
+    buffer: String,
 }
 
 impl<'tz> Clock<'tz> {
@@ -61,6 +63,7 @@ impl<'tz> Clock<'tz> {
             center,
             second,
             military,
+            buffer: String::new(),
         }
     }
 
@@ -87,13 +90,6 @@ impl<'tz> Clock<'tz> {
         }
     }
 
-    /// Resets the canvas and current date and time.
-    pub fn reset<W: io::Write>(&mut self, mut out: W) -> io::Result<()> {
-        self.date = time::Date::default();
-        self.time = time::Time::blank(self.second, self.military);
-        write!(out, "{}{}", RESET, term::CLEAR)
-    }
-
     /// Sleeps until approximately the next second boundary.
     pub fn sync(&self) {
         let start = chrono::Local::now().nanosecond() as u64;
@@ -102,8 +98,7 @@ impl<'tz> Clock<'tz> {
     }
 
     /// Draws the differences between the previous time and the next.
-    /// Must call `reset` beforehand if formatting changes have occurred.
-    pub fn draw<W: io::Write>(&mut self, mut out: W) -> io::Result<()> {
+    pub fn update<W: io::Write>(&mut self, mut out: W) -> io::Result<()> {
 
         let (date, time) = time::now(&self.zone, self.second, self.military);
         let draw = self.time ^ time;
@@ -131,17 +126,60 @@ impl<'tz> Clock<'tz> {
         }
 
         // Only write date if it has changed
-        if date != self.date {
-            let date_x = self.x + self.width() / 2 - date.width() / 2;
-            let date_y = self.y + self.height() + 1;
-            let goto = term::Move(date_x, date_y);
-            write!(out, "{}{}{}", RESET, goto, date)?;
-        }
+        if date != self.date { self.draw_date(&date, &mut out)?; }
 
         out.flush()?;
         self.date = date;
         self.time = time;
         Ok(())
+    }
+
+    /// Efficiently redraws the entire clock display.
+    pub fn reset<W: io::Write>(&mut self, mut out: W) -> io::Result<()> {
+
+        let (date, time) = time::now(self.zone, self.second, self.military);
+
+        write!(out, "{}{}", term::RESET, term::CLEAR)?;
+
+        // Scan through each row
+        for y in 0..font::H {
+
+            self.buffer.clear();
+
+            // Scan through each digit
+            for digit in 0..self.digits() {
+                let width = self.w as usize;
+                let mut mask = 1 << ((font::H - y) * font::W);
+                for _ in 0..font::W {
+                    mask >>= 1;
+                    let color = if time[digit] & mask > 0 { self.color } else { RESET };
+                    write!(&mut self.buffer, "{}{:2$}", color, " ", width).unwrap();
+                }
+                write!(&mut self.buffer, "{}{:2$}", RESET, " ", width).unwrap();
+            }
+
+            for i in 0..self.h {
+
+                // Move to beginning of line
+                let x = self.x;
+                let y = self.y + y * self.h + i;
+                write!(out, "{}{}", term::Move(x, y), self.buffer)?;
+
+            }
+        }
+
+        self.draw_date(&date, &mut out)?;
+        out.flush()?;
+        self.date = date;
+        self.time = time;
+        Ok(())
+    }
+
+    fn draw_date<W: io::Write>(&self, date: &time::Date, out: &mut W) -> io::Result<()> {
+        let date_x = self.x + self.width() / 2 - date.width() / 2;
+        let date_y = self.y + self.height() + 1;
+        let goto = term::Move(date_x, date_y);
+        write!(out, "{}{}{}", RESET, goto, date)
     }
 
     /// Get number of characters in current time format.
