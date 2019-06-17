@@ -1,5 +1,6 @@
 use std::fmt;
 use std::str;
+use std::cell;
 
 /// Clear the screen.
 pub const CLEAR: &'static str = "\x1B[2J";
@@ -28,46 +29,46 @@ impl fmt::Display for Move {
 
 /// Edge-triggered paint: will only write
 /// escape code when switching paint colors.
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Brush {
     paint: Paint,
-    dried: bool,
-    raised: bool,
+    dried: cell::Cell<bool>,
+    on: bool,
 }
 
 impl Brush {
     pub fn new(color: Color) -> Self {
         Brush {
             paint: Paint { color, ground: Ground::Back },
-            dried: true,
-            raised: false,
+            dried: cell::Cell::new(true),
+            on: false,
         }
     }
 
     pub fn dip(&mut self, color: Color) {
-        self.paint = Paint { color, ground: Ground::Back };
-        self.dried = false;
+        let old = self.paint;
+        let new = Paint { color, ground: Ground::Back };
+        if self.on { self.dried.set(old == new && self.dried.get()); }
+        self.paint = new;
     }
 
     pub fn raise(&mut self) {
-        self.set(true)
+        self.set(false)
     }
 
-    pub fn set(&mut self, raise: bool) {
-        self.dried = self.raised == raise;
-        self.raised = raise;
+    pub fn set(&mut self, on: bool) {
+        self.dried.set(on == self.on && self.dried.get());
+        self.on = on;
     }
 }
 
 impl fmt::Display for Brush {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        if self.dried {
-            Ok(())
-        } else if self.raised {
-            write!(fmt, "{}", RESET)
-        } else {
-            write!(fmt, "{}", self.paint)
+        if self.dried.get()  {
+            return Ok(())
         }
+        self.dried.set(true);
+        write!(fmt, "{}", if self.on { self.paint } else { RESET })
     }
 }
 

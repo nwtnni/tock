@@ -109,11 +109,12 @@ impl<'tz> Clock<'tz> {
             for i in 0..15 {
                 mask >>= 1;
                 if draw[digit] & mask == 0 { continue }
-                self.brush.set(time[digit] & mask == 0);
+                let on = time[digit] & mask > 0;
                 let width = self.w as usize;
                 let x = i % font::W * self.w + dx;
                 let y = i / font::W * self.h + dy;
                 for j in 0..self.h {
+                    self.brush.set(on);
                     let goto = brush::Move(x, y + j);
                     write!(out, "{}{}{:3$}", self.brush, goto, " ", width)?;
                 }
@@ -148,7 +149,7 @@ impl<'tz> Clock<'tz> {
                 let mut mask = 1 << ((font::H - y) * font::W);
                 for _ in 0..font::W {
                     mask >>= 1;
-                    self.brush.set(time[digit] & mask == 0);
+                    self.brush.set(time[digit] & mask > 0);
                     write!(&mut self.buffer, "{}{:2$}", self.brush, " ", width).unwrap();
                 }
                 self.brush.raise();
