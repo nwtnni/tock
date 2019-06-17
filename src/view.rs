@@ -30,6 +30,7 @@ pub struct Clock<'tz> {
     center: bool,
     second: bool,
     military: bool,
+    format: String,
     buffer: String,
 }
 
@@ -46,6 +47,7 @@ impl<'tz> Clock<'tz> {
         center: bool,
         second: bool,
         military: bool,
+        format: String,
     ) -> Self {
         Clock {
             x, y,
@@ -57,6 +59,7 @@ impl<'tz> Clock<'tz> {
             center,
             second,
             military,
+            format,
             buffer: String::new(),
         }
     }
@@ -175,11 +178,13 @@ impl<'tz> Clock<'tz> {
 
     /// Draw the current date.
     fn draw_date<W: io::Write>(&mut self, date: &time::Date, out: &mut W) -> io::Result<()> {
-        let date_x = self.x + self.width() / 2 - date.width() / 2;
+        self.brush.raise();
+        self.buffer.clear();
+        date.format(&self.format, &mut self.buffer);
+        let date_x = self.x + self.width() / 2 - self.buffer.len() as u16 / 2;
         let date_y = self.y + self.height() + 1;
         let goto = brush::Move(date_x, date_y);
-        self.brush.raise();
-        write!(out, "{}{}{}", self.brush, goto, date)
+        write!(out, "{}{}{}", self.brush, goto, self.buffer)
     }
 
     /// Get number of characters in current time format.

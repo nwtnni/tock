@@ -57,6 +57,17 @@ struct Opt {
     /// [0]: https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
     #[structopt(short = "C", long = "color", default_value = "2")]
     color: brush::Color,
+
+    /// Change the date format.
+    ///
+    /// Accepts a format string using [strftime][0] notation. Note
+    /// that occurrences of the `%Z` specifier are naively replaced
+    /// with the contents of the `TZ` environment variable, or the
+    /// string "Local" if `TZ` is not set.
+    ///
+    /// [0]: https://docs.rs/chrono/0.4.6/chrono/format/strftime/index.html
+    #[structopt(short = "f", long = "format", default_value = "%A, %B %m, %Y | %Z")]
+    format: String,
 }
 
 /// Signal flag for interrupts.
@@ -117,6 +128,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         args.center,
         args.second,
         args.military,
+        args.format,
     );
 
     // Draw immediately for responsiveness

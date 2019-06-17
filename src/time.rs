@@ -1,4 +1,4 @@
-use std::fmt;
+use std::fmt::Write;
 
 use chrono::prelude::*;
 
@@ -10,6 +10,35 @@ pub fn now(tz: &str, second: bool, military: bool) -> (Date, Time) {
     let date = Date::new(&dt, tz);
     let time = Time::new(&dt, second, military);
     (date, time)
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Date<'tz> {
+    date: chrono::DateTime<Local>,
+    zone: &'tz str,
+}
+
+impl<'tz> Date<'tz> {
+    pub fn new(dt: &chrono::DateTime<chrono::Local>, tz: &'tz str) -> Self {
+        Date { date: *dt, zone: tz }
+    }
+
+    // TODO: can we get rid of this heap allocation?
+    pub fn format(&self, fmt: &str, buffer: &mut String) {
+        write!(buffer, "{}", self.date.format(&fmt.replace("%Z", self.zone))).unwrap()
+    }
+}
+
+impl<'tz> Default for Date<'tz> {
+    fn default() -> Self {
+        Date {
+            date: chrono::DateTime::from_utc(
+                chrono::NaiveDate::from_ymd(1, 1, 1).and_hms(1, 1, 1),
+                chrono::offset::FixedOffset::east(0),
+            ),
+            zone: "",
+        }
+    }
 }
 
 /// Represents time as bitmap digits for ease of diffing and drawing.
@@ -114,35 +143,5 @@ impl std::ops::BitXor for Time {
         | (M12(l), M12(r)) => { zip!(M12, l, r, 8) }
         | (_, _) => unreachable!(),
         }
-    }
-}
-
-/// Represents the current date.
-#[derive(Clone, Debug, PartialEq, Eq, Default)]
-pub struct Date<'tz> {
-    pub y: i32,
-    pub m: u8,
-    pub d: u8,
-    pub z: &'tz str,
-}
-
-impl<'tz> Date<'tz> {
-    fn new<D: Datelike>(date: &D, zone: &'tz str) -> Date<'tz> {
-        Date {
-            y: date.year(),
-            m: date.month() as u8,
-            d: date.day() as u8,
-            z: zone,
-        }
-    }
-
-    pub fn width(&self) -> u16 {
-        4 + 1 + 2 + 1 + 2 + 3 + self.z.len() as u16
-    }
-}
-
-impl<'tz> fmt::Display for Date<'tz> {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{:4}-{:02}-{:02} | {}", self.y, self.m, self.d, self.z)
     }
 }
