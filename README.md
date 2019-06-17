@@ -84,5 +84,20 @@ OPTIONS:
             Vertical 0-indexed position of top-left corner. [default: 1]
 ```
 
+## References
+
+- [How Not to Write a Signal Handler][2]
+- [What is the difference between sigaction and signal?][3]
+- [A Brief Introduction to termios: termios(3) and stty][4]
+- [Understanding UNIX termios VMIN and VTIME][5]
+- [Specifying the TIme Zone with TZ][6]
+- [min-sized-rust][7]
+
 [0]: https://github.com/xorg62/tty-clock
 [1]: https://crates.io/
+[2]: http://lazarenko.me/signal-handler/
+[3]: https://stackoverflow.com/questions/231912/what-is-the-difference-between-sigaction-and-signal
+[4]: https://blog.nelhage.com/2009/12/a-brief-introduction-to-termios-termios3-and-stty/
+[5]: http://www.unixwiz.net/techtips/termios-vmin-vtime.html
+[6]: https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html
+[7]: https://github.com/johnthagen/min-sized-rust
