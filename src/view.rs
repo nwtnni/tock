@@ -172,6 +172,7 @@ impl<'tz> Clock<'tz> {
         Ok(())
     }
 
+    /// Draw the current date.
     fn draw_date<W: io::Write>(&mut self, date: &time::Date, out: &mut W) -> io::Result<()> {
         let date_x = self.x + self.width() / 2 - date.width() / 2;
         let date_y = self.y + self.height() + 1;
