@@ -27,7 +27,6 @@ pub struct Clock<'tz> {
     time: time::Time,
     zone: &'tz str,
     brush: brush::Brush,
-    color: brush::Paint,
     center: bool,
     second: bool,
     military: bool,
@@ -54,8 +53,7 @@ impl<'tz> Clock<'tz> {
             date: time::Date::default(),
             time: time::Time::blank(second, military),
             zone,
-            brush: brush::Brush::default(),
-            color: brush::Paint { color, ground: brush::Ground::Back },
+            brush: brush::Brush::new(color),
             center,
             second,
             military,
@@ -75,7 +73,7 @@ impl<'tz> Clock<'tz> {
 
     /// Set the color of the clock's time display.
     pub fn set_color(&mut self, color: brush::Color) {
-        self.color = brush::Paint { color, ground: brush::Ground::Back };
+        self.brush.dip(color)
     }
 
     /// Adjusts the clock's position to match the provided terminal dimensions.
@@ -111,11 +109,7 @@ impl<'tz> Clock<'tz> {
             for i in 0..15 {
                 mask >>= 1;
                 if draw[digit] & mask == 0 { continue }
-                if time[digit] & mask > 0 {
-                    self.brush.set(self.color)
-                } else {
-                    self.brush.reset()
-                };
+                self.brush.set(time[digit] & mask == 0);
                 let width = self.w as usize;
                 let x = i % font::W * self.w + dx;
                 let y = i / font::W * self.h + dy;
@@ -140,7 +134,7 @@ impl<'tz> Clock<'tz> {
 
         let (date, time) = time::now(self.zone, self.second, self.military);
 
-        self.brush.reset();
+        self.brush.raise();
         write!(out, "{}{}", self.brush, brush::CLEAR)?;
 
         // Scan through each row
@@ -154,14 +148,10 @@ impl<'tz> Clock<'tz> {
                 let mut mask = 1 << ((font::H - y) * font::W);
                 for _ in 0..font::W {
                     mask >>= 1;
-                    if time[digit] & mask > 0 {
-                        self.brush.set(self.color)
-                    } else {
-                        self.brush.reset()
-                    }
+                    self.brush.set(time[digit] & mask == 0);
                     write!(&mut self.buffer, "{}{:2$}", self.brush, " ", width).unwrap();
                 }
-                self.brush.reset();
+                self.brush.raise();
                 write!(&mut self.buffer, "{}{:2$}", self.brush, " ", width).unwrap();
             }
 
@@ -186,7 +176,7 @@ impl<'tz> Clock<'tz> {
         let date_x = self.x + self.width() / 2 - date.width() / 2;
         let date_y = self.y + self.height() + 1;
         let goto = brush::Move(date_x, date_y);
-        self.brush.reset();
+        self.brush.raise();
         write!(out, "{}{}{}", self.brush, goto, date)
     }
 

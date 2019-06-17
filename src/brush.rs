@@ -32,28 +32,42 @@ impl fmt::Display for Move {
 pub struct Brush {
     paint: Paint,
     dried: bool,
+    raised: bool,
 }
 
 impl Brush {
-    pub fn set(&mut self, paint: Paint) {
-        self.dried = self.paint == paint;
-        self.paint = paint;
+    pub fn new(color: Color) -> Self {
+        Brush {
+            paint: Paint { color, ground: Ground::Back },
+            dried: true,
+            raised: false,
+        }
     }
 
-    pub fn reset(&mut self) {
-        self.set(RESET)
+    pub fn dip(&mut self, color: Color) {
+        self.paint = Paint { color, ground: Ground::Back };
+        self.dried = false;
     }
-}
 
-impl Default for Brush {
-    fn default() -> Self {
-        Brush { paint: RESET, dried: true, }
+    pub fn raise(&mut self) {
+        self.set(true)
+    }
+
+    pub fn set(&mut self, raise: bool) {
+        self.dried = self.raised == raise;
+        self.raised = raise;
     }
 }
 
 impl fmt::Display for Brush {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        if self.dried { Ok(()) } else { write!(fmt, "{}", self.paint) }
+        if self.dried {
+            Ok(())
+        } else if self.raised {
+            write!(fmt, "{}", RESET)
+        } else {
+            write!(fmt, "{}", self.paint)
+        }
     }
 }
 
