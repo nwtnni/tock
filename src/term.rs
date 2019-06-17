@@ -4,6 +4,7 @@ use std::mem;
 use crate::brush;
 
 /// Non-canonical mode terminal.
+#[allow(dead_code)]
 pub struct Term<'main> {
     termios: libc::termios,
     stdin: io::StdinLock<'main>,
@@ -63,6 +64,7 @@ impl<'main> Term<'main> {
     }
 
     /// Non-blocking poll for user input.
+    #[allow(dead_code)]
     pub fn poll(&mut self) -> Option<char> {
         match self.stdin.read_exact(&mut self.buffer) {
         | Ok(_) => Some(self.buffer[0] as char),

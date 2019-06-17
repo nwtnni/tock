@@ -65,16 +65,19 @@ impl<'tz> Clock<'tz> {
     }
 
     /// Toggle second display.
+    #[allow(dead_code)]
     pub fn toggle_second(&mut self) {
         self.second ^= true;
     }
 
     /// Toggle military (24H) time.
+    #[allow(dead_code)]
     pub fn toggle_military(&mut self) {
         self.military ^= true;
     }
 
     /// Set the color of the clock's time display.
+    #[allow(dead_code)]
     pub fn set_color(&mut self, color: brush::Color) {
         self.brush.dip(color)
     }
