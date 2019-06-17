@@ -3,6 +3,13 @@ name = "tock"
 version = "0.1.0"
 authors = ["Newton Ni <nwtnni@gmail.com>"]
 edition = "2018"
+license = "MIT"
+description = "Digital clock for the terminal"
+readme = "README.md"
+homepage = "https://github.com/nwtnni/tock"
+repository = "https://github.com/nwtnni/tock"
+keywords = ["clock", "terminal", "cli"]
+categories = ["command-line-utilities"]
 
 [features]
 default = ["interactive"]
@@ -10,8 +17,8 @@ interactive = []
 
 [dependencies]
 chrono = "0.4.6"
-structopt = "0.2.16"
 libc = "0.2.58"
+structopt = "0.2.16"
 
 [profile.release]
 opt-level = 'z'
