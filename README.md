@@ -4,6 +4,8 @@ A digital clock for the terminal, inspired by [tty-clock][0].
 Unfortunately only works on UNIX systems due to the use of
 the `termios` and `sigaction` related function calls.
 
+Note: emulating all features of tty-clock is **not** a goal of this project.
+
 ## Features
 
 - Efficient bitmap and diff-based drawing
@@ -90,7 +92,7 @@ OPTIONS:
 - [What is the difference between sigaction and signal?][3]
 - [A Brief Introduction to termios: termios(3) and stty][4]
 - [Understanding UNIX termios VMIN and VTIME][5]
-- [Specifying the TIme Zone with TZ][6]
+- [Specifying the Time Zone with TZ][6]
 - [min-sized-rust][7]
 
 [0]: https://github.com/xorg62/tty-clock
