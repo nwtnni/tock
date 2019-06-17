@@ -66,7 +66,7 @@ struct Opt {
     /// string "Local" if `TZ` is not set.
     ///
     /// [0]: https://docs.rs/chrono/0.4.6/chrono/format/strftime/index.html
-    #[structopt(short = "f", long = "format", default_value = "%A, %B %m, %Y | %Z")]
+    #[structopt(short = "f", long = "format", default_value = "%F | %Z")]
     format: String,
 }
 
