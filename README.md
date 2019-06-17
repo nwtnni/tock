@@ -69,24 +69,24 @@ OPTIONS:
     -C, --color <color>
             Change the color of the time.
 
-            Accepts either a [single 8-bit number][0] or three comma-separated 
-						8-bit numbers in R,G,B format. Does not check if your terminal supports 
-						the entire range of 8-bit or 24-bit colors.
+            Accepts either a [single 8-bit number][0] or three comma-separated
+            8-bit numbers in R,G,B format. Does not check if your terminal supports
+            the entire range of 8-bit or 24-bit colors.
 
             [0]: https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
-
-						[default: 2]
+            
+            [default: 2]
 
     -f, --format <format>
             Change the date format.
 
-            Accepts a format string using [strftime][0] notation. Note that 
-						occurrences of the `%Z` specifier are naively replaced with the contents 
-						of the `TZ` environment variable, or the string "Local" if `TZ` is not set.
+            Accepts a format string using [strftime][0] notation. Note that
+            occurrences of the `%Z` specifier are naively replaced with the contents
+            of the `TZ` environment variable, or the string "Local" if `TZ` is not set.
 
             [0]: https://docs.rs/chrono/0.4.6/chrono/format/strftime/index.html
-
-						[default: %F | %Z]
+            
+            [default: %F | %Z]
 
     -h, --height <h>
             Font height in characters per tile. [default: 1]
@@ -110,6 +110,9 @@ feature flag set are:
 - `0`..=`7`: Change to corresponding ANSI color.
 
 ## Changelog
+
+- 0.1.2
+  * Fix README formatting (oops).
 
 - 0.1.1
 	* Implement support for date formatting strings via `-f` option.
