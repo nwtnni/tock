@@ -7,6 +7,7 @@ use std::sync::atomic;
 
 use structopt::StructOpt;
 
+mod brush;
 mod font;
 mod term;
 mod time;
@@ -55,7 +56,7 @@ struct Opt {
     ///
     /// [0]: https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
     #[structopt(short = "C", long = "color", default_value = "2")]
-    color: term::Color,
+    color: brush::Color,
 }
 
 /// Signal flag for interrupts.
@@ -150,7 +151,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             }
             | '0' ..= '7' => {
                 dirty = true; 
-                clock.set_color(term::Color::C8(term::C8(c as u8 - 48)));
+                clock.set_color(brush::Color::C8(brush::C8(c as u8 - 48)));
             }
             | _ => (),
             }

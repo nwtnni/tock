@@ -1,11 +1,10 @@
 use std::io;
-use std::fmt;
 use std::fmt::Write;
 
 use chrono::Timelike;
 
+use crate::brush;
 use crate::font;
-use crate::term;
 use crate::time;
 
 //  H       :   M       :   S
@@ -27,8 +26,8 @@ pub struct Clock<'tz> {
     date: time::Date<'tz>,
     time: time::Time,
     zone: &'tz str,
-    brush: Brush,
-    color: term::Paint,
+    brush: brush::Brush,
+    color: brush::Paint,
     center: bool,
     second: bool,
     military: bool,
@@ -44,7 +43,7 @@ impl<'tz> Clock<'tz> {
         w: u16,
         h: u16,
         zone: &'tz str,
-        color: term::Color,
+        color: brush::Color,
         center: bool,
         second: bool,
         military: bool,
@@ -55,8 +54,8 @@ impl<'tz> Clock<'tz> {
             date: time::Date::default(),
             time: time::Time::blank(second, military),
             zone,
-            brush: Brush::default(),
-            color: term::Paint { color, ground: term::Ground::Back },
+            brush: brush::Brush::default(),
+            color: brush::Paint { color, ground: brush::Ground::Back },
             center,
             second,
             military,
@@ -75,8 +74,8 @@ impl<'tz> Clock<'tz> {
     }
 
     /// Set the color of the clock's time display.
-    pub fn set_color(&mut self, color: term::Color) {
-        self.color = term::Paint { color, ground: term::Ground::Back };
+    pub fn set_color(&mut self, color: brush::Color) {
+        self.color = brush::Paint { color, ground: brush::Ground::Back };
     }
 
     /// Adjusts the clock's position to match the provided terminal dimensions.
@@ -121,7 +120,7 @@ impl<'tz> Clock<'tz> {
                 let x = i % font::W * self.w + dx;
                 let y = i / font::W * self.h + dy;
                 for j in 0..self.h {
-                    let goto = term::Move(x, y + j);
+                    let goto = brush::Move(x, y + j);
                     write!(out, "{}{}{:3$}", self.brush, goto, " ", width)?;
                 }
             }
@@ -142,7 +141,7 @@ impl<'tz> Clock<'tz> {
         let (date, time) = time::now(self.zone, self.second, self.military);
 
         self.brush.reset();
-        write!(out, "{}{}", self.brush, term::CLEAR)?;
+        write!(out, "{}{}", self.brush, brush::CLEAR)?;
 
         // Scan through each row
         for y in 0..font::H {
@@ -171,7 +170,7 @@ impl<'tz> Clock<'tz> {
                 // Move to beginning of line
                 let x = self.x;
                 let y = self.y + y * self.h + i;
-                write!(out, "{}{}", term::Move(x, y), self.buffer)?;
+                write!(out, "{}{}", brush::Move(x, y), self.buffer)?;
 
             }
         }
@@ -186,7 +185,7 @@ impl<'tz> Clock<'tz> {
     fn draw_date<W: io::Write>(&mut self, date: &time::Date, out: &mut W) -> io::Result<()> {
         let date_x = self.x + self.width() / 2 - date.width() / 2;
         let date_y = self.y + self.height() + 1;
-        let goto = term::Move(date_x, date_y);
+        let goto = brush::Move(date_x, date_y);
         self.brush.reset();
         write!(out, "{}{}{}", self.brush, goto, date)
     }
@@ -204,39 +203,5 @@ impl<'tz> Clock<'tz> {
     /// Get current clock height in characters.
     pub fn height(&self) -> u16 {
         (self.h * font::H)
-    }
-}
-
-const RESET: term::Paint = term::Paint {
-    color: term::Color::Reset,
-    ground: term::Ground::Back,
-};
-
-#[derive(Copy, Clone, Debug)]
-struct Brush {
-    paint: term::Paint,
-    dried: bool,
-}
-
-impl Brush {
-    fn set(&mut self, paint: term::Paint) {
-        self.dried = self.paint == paint;
-        self.paint = paint;
-    }
-
-    fn reset(&mut self) {
-        self.set(RESET)
-    }
-}
-
-impl Default for Brush {
-    fn default() -> Self {
-        Brush { paint: RESET, dried: true, }
-    }
-}
-
-impl fmt::Display for Brush {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        if self.dried { Ok(()) } else { write!(fmt, "{}", self.paint) }
     }
 }
