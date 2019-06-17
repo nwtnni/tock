@@ -1,4 +1,5 @@
 use std::io;
+use std::fmt;
 use std::fmt::Write;
 
 use chrono::Timelike;
@@ -6,12 +7,6 @@ use chrono::Timelike;
 use crate::font;
 use crate::term;
 use crate::time;
-
-/// Background color for resetting brush.
-const RESET: term::Paint = term::Paint {
-    color: term::Color::Reset,
-    ground: term::Ground::Back,
-};
 
 //  H       :   M       :   S
 // ...|...|...|...|...|...|...|...
@@ -32,6 +27,7 @@ pub struct Clock<'tz> {
     date: time::Date<'tz>,
     time: time::Time,
     zone: &'tz str,
+    brush: Brush,
     color: term::Paint,
     center: bool,
     second: bool,
@@ -59,6 +55,7 @@ impl<'tz> Clock<'tz> {
             date: time::Date::default(),
             time: time::Time::blank(second, military),
             zone,
+            brush: Brush::default(),
             color: term::Paint { color, ground: term::Ground::Back },
             center,
             second,
@@ -113,14 +110,19 @@ impl<'tz> Clock<'tz> {
             let mut mask = 0b1_000_000_000_000_000u16;
 
             for i in 0..15 {
-                mask >>= 1; if draw[digit] & mask == 0 { continue }
-                let color = if time[digit] & mask > 0 { self.color } else { RESET };
+                mask >>= 1;
+                if draw[digit] & mask == 0 { continue }
+                if time[digit] & mask > 0 {
+                    self.brush.set(self.color)
+                } else {
+                    self.brush.reset()
+                };
                 let width = self.w as usize;
                 let x = i % font::W * self.w + dx;
                 let y = i / font::W * self.h + dy;
                 for j in 0..self.h {
                     let goto = term::Move(x, y + j);
-                    write!(out, "{}{}{:3$}", color, goto, " ", width)?;
+                    write!(out, "{}{}{:3$}", self.brush, goto, " ", width)?;
                 }
             }
         }
@@ -139,7 +141,8 @@ impl<'tz> Clock<'tz> {
 
         let (date, time) = time::now(self.zone, self.second, self.military);
 
-        write!(out, "{}{}", term::RESET, term::CLEAR)?;
+        self.brush.reset();
+        write!(out, "{}{}", self.brush, term::CLEAR)?;
 
         // Scan through each row
         for y in 0..font::H {
@@ -152,10 +155,15 @@ impl<'tz> Clock<'tz> {
                 let mut mask = 1 << ((font::H - y) * font::W);
                 for _ in 0..font::W {
                     mask >>= 1;
-                    let color = if time[digit] & mask > 0 { self.color } else { RESET };
-                    write!(&mut self.buffer, "{}{:2$}", color, " ", width).unwrap();
+                    if time[digit] & mask > 0 {
+                        self.brush.set(self.color)
+                    } else {
+                        self.brush.reset()
+                    }
+                    write!(&mut self.buffer, "{}{:2$}", self.brush, " ", width).unwrap();
                 }
-                write!(&mut self.buffer, "{}{:2$}", RESET, " ", width).unwrap();
+                self.brush.reset();
+                write!(&mut self.buffer, "{}{:2$}", self.brush, " ", width).unwrap();
             }
 
             for i in 0..self.h {
@@ -175,11 +183,12 @@ impl<'tz> Clock<'tz> {
         Ok(())
     }
 
-    fn draw_date<W: io::Write>(&self, date: &time::Date, out: &mut W) -> io::Result<()> {
+    fn draw_date<W: io::Write>(&mut self, date: &time::Date, out: &mut W) -> io::Result<()> {
         let date_x = self.x + self.width() / 2 - date.width() / 2;
         let date_y = self.y + self.height() + 1;
         let goto = term::Move(date_x, date_y);
-        write!(out, "{}{}{}", RESET, goto, date)
+        self.brush.reset();
+        write!(out, "{}{}{}", self.brush, goto, date)
     }
 
     /// Get number of characters in current time format.
@@ -198,3 +207,36 @@ impl<'tz> Clock<'tz> {
     }
 }
 
+const RESET: term::Paint = term::Paint {
+    color: term::Color::Reset,
+    ground: term::Ground::Back,
+};
+
+#[derive(Copy, Clone, Debug)]
+struct Brush {
+    paint: term::Paint,
+    dried: bool,
+}
+
+impl Brush {
+    fn set(&mut self, paint: term::Paint) {
+        self.dried = self.paint == paint;
+        self.paint = paint;
+    }
+
+    fn reset(&mut self) {
+        self.set(RESET)
+    }
+}
+
+impl Default for Brush {
+    fn default() -> Self {
+        Brush { paint: RESET, dried: true, }
+    }
+}
+
+impl fmt::Display for Brush {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        if self.dried { Ok(()) } else { write!(fmt, "{}", self.paint) }
+    }
+}
