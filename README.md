@@ -12,9 +12,11 @@ Note: emulating all features of tty-clock is **not** a goal of this project.
 - Timezone support via the `TZ` environment variable and `tzselect` utility
 - Military time and second display toggling
 - Color customization using ANSI, 8-bit, or 24-bit color values
+- Arbitrary date formatting
 - Positioned or centered clock
 - Adjustable display size
 - Synchronization with system clock seconds
+- Minimal syscalls (about one `read`, `write`, `nanosleep` per second)
 
 ## Screenshots
 
@@ -68,10 +70,23 @@ OPTIONS:
             Change the color of the time.
 
             Accepts either a [single 8-bit number][0] or three comma-separated 
-            8-bit numbers in R,G,B format. Does not check if your terminal 
-            supports the entire range of 8-bit or 24-bit colors.
+						8-bit numbers in R,G,B format. Does not check if your terminal supports 
+						the entire range of 8-bit or 24-bit colors.
 
-            [0]: https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit [default: 2]
+            [0]: https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
+
+						[default: 2]
+
+    -f, --format <format>
+            Change the date format.
+
+            Accepts a format string using [strftime][0] notation. Note that 
+						occurrences of the `%Z` specifier are naively replaced with the contents 
+						of the `TZ` environment variable, or the string "Local" if `TZ` is not set.
+
+            [0]: https://docs.rs/chrono/0.4.6/chrono/format/strftime/index.html
+
+						[default: %F | %Z]
 
     -h, --height <h>
             Font height in characters per tile. [default: 1]
@@ -83,8 +98,25 @@ OPTIONS:
             Horizontal 0-indexed position of top-left corner. [default: 1]
 
     -y, --y <y>
-            Vertical 0-indexed position of top-left corner. [default: 1]
 ```
+
+Currently compiles with the `interactive` feature flag set by default, which
+polls `stdin` for user input once per second. Available commands with this
+feature flag set are:
+
+- `q` or `Q` or `<ESC>`: Exit.
+- `s`: Toggle second display.
+- `m`: Toggle military (24H) time.
+- `0`..=`7`: Change to corresponding ANSI color.
+
+## Changelog
+
+- 0.1.1
+	* Implement support for date formatting strings via `-f` option.
+	* Fix logic in Brush abstraction by only setting `dried` flag after writing.
+
+- 0.1.0
+	* Initial release.
 
 ## References
 
