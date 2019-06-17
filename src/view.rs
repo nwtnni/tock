@@ -6,6 +6,7 @@ use crate::font;
 use crate::term;
 use crate::time;
 
+/// Background color for resetting brush.
 const RESET: term::Paint = term::Paint {
     color: term::Color::Reset,
     ground: term::Ground::Back,
@@ -20,6 +21,7 @@ const RESET: term::Paint = term::Paint {
 //
 //           ....-..-..
 //           Y    M  S
+/// Represents a digital clock.
 #[derive(Clone, Debug)]
 pub struct Clock<'tz> {
     x: u16,
@@ -37,7 +39,8 @@ pub struct Clock<'tz> {
 
 impl<'tz> Clock<'tz> {
 
-    pub fn start(
+    /// Create a new clock instance.
+    pub fn new(
         x: u16,
         y: u16,
         w: u16,
@@ -47,8 +50,8 @@ impl<'tz> Clock<'tz> {
         center: bool,
         second: bool,
         military: bool,
-    ) -> io::Result<Self> {
-        Ok(Clock {
+    ) -> Self {
+        Clock {
             x, y,
             w, h,
             date: time::Date::default(),
@@ -58,21 +61,25 @@ impl<'tz> Clock<'tz> {
             center,
             second,
             military,
-        })
+        }
     }
 
+    /// Toggle second display.
     pub fn toggle_second(&mut self) {
         self.second ^= true;
     }
 
+    /// Toggle military (24H) time.
     pub fn toggle_military(&mut self) {
         self.military ^= true;
     }
 
+    /// Set the color of the clock's time display.
     pub fn set_color(&mut self, color: term::Color) {
         self.color = term::Paint { color, ground: term::Ground::Back };
     }
 
+    /// Adjusts the clock's position to match the provided terminal dimensions.
     pub fn resize(&mut self, (w, h): (u16, u16)) {
         if self.center {
             self.x = w / 2 - self.width() / 2;
@@ -80,29 +87,34 @@ impl<'tz> Clock<'tz> {
         }
     }
 
+    /// Resets the canvas and current date and time.
     pub fn reset<W: io::Write>(&mut self, mut out: W) -> io::Result<()> {
         self.date = time::Date::default();
         self.time = time::Time::blank(self.second, self.military);
         write!(out, "{}{}", RESET, term::CLEAR)
     }
 
-    /// Best effort real-time synchronization.
+    /// Sleeps until approximately the next second boundary.
     pub fn sync(&self) {
         let start = chrono::Local::now().nanosecond() as u64;
         let delay = std::time::Duration::from_nanos(1_000_000_000 - start);
         std::thread::sleep(delay);
     }
 
+    /// Draws the differences between the previous time and the next.
+    /// Must call `reset` beforehand if formatting changes have occurred.
     pub fn draw<W: io::Write>(&mut self, mut out: W) -> io::Result<()> {
 
         let (date, time) = time::now(&self.zone, self.second, self.military);
         let draw = self.time ^ time;
 
+        // Scan through each digit
         for digit in 0..self.digits() {
 
             let dx = self.x + ((font::W + 1) * self.w * digit as u16);
             let dy = self.y;
 
+            // Scan through all bits in digit
             let mut mask = 0b1_000_000_000_000_000u16;
 
             for i in 0..15 {
@@ -118,6 +130,7 @@ impl<'tz> Clock<'tz> {
             }
         }
 
+        // Only write date if it has changed
         if date != self.date {
             let date_x = self.x + self.width() / 2 - date.width() / 2;
             let date_y = self.y + self.height() + 1;
@@ -131,14 +144,17 @@ impl<'tz> Clock<'tz> {
         Ok(())
     }
 
+    /// Get number of characters in current time format.
     fn digits(&self) -> usize {
         time::Time::width(self.second, self.military)
     }
 
+    /// Get current clock width in characters.
     pub fn width(&self) -> u16 {
         (self.w * (font::W + 1)) * self.digits() as u16 - 1
     }
 
+    /// Get current clock height in characters.
     pub fn height(&self) -> u16 {
         (self.h * font::H)
     }

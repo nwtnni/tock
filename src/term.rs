@@ -12,6 +12,7 @@ pub const HIDE: &'static str = "\x1B[?25l";
 /// Show the cursor.
 pub const SHOW: &'static str = "\x1B[?25h";
 
+/// Reset all colors and styles.
 pub const RESET: &'static str = "\x1B[0m";
 
 /// Non-canonical mode terminal.
@@ -36,6 +37,7 @@ impl<'main> Term<'main> {
 
         let termios = unsafe {
 
+            // Ensure that we have a tty device
             if libc::isatty(libc::STDIN_FILENO) != 1
             || libc::isatty(libc::STDOUT_FILENO) != 1 {
                 return Err(io::Error::new(io::ErrorKind::Other, "[USER ERROR]: not a TTY"))
@@ -63,6 +65,7 @@ impl<'main> Term<'main> {
         Ok(Term { termios, stdin, stdout, buffer: [0] })
     }
 
+    /// Get the terminal width and height.
     pub fn size(&self) -> io::Result<(u16, u16)> {
         unsafe {
             let mut size: libc::winsize = mem::zeroed();
@@ -71,6 +74,7 @@ impl<'main> Term<'main> {
         }
     }
 
+    /// Non-blocking poll for user input.
     pub fn poll(&mut self) -> Option<char> {
         match self.stdin.read_exact(&mut self.buffer) {
         | Ok(_) => Some(self.buffer[0] as char),
@@ -89,6 +93,7 @@ impl<'main> io::Write for Term<'main> {
 }
 
 impl<'main> Drop for Term<'main> {
+    /// Restore initial termios settings and clear the screen.
     fn drop(&mut self) {
         unsafe {
             write!(self.stdout, "{}{}{}{}", RESET, CLEAR, Move::default(), SHOW).ok();
@@ -97,7 +102,7 @@ impl<'main> Drop for Term<'main> {
     }
 }
 
-/// 0-indexed (x, y) terminal position.
+/// Move the cursor to 0-indexed (x, y) terminal position.
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Move(pub u16, pub u16);
 
@@ -107,6 +112,7 @@ impl fmt::Display for Move {
     }
 }
 
+/// Change the terminal's writing color.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Paint {
     pub color: Color,

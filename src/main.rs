@@ -58,7 +58,10 @@ struct Opt {
     color: term::Color,
 }
 
+/// Signal flag for interrupts.
 static FINISH: atomic::AtomicBool = atomic::AtomicBool::new(false);
+
+/// Signal flag for window size changes.
 static RESIZE: atomic::AtomicBool = atomic::AtomicBool::new(false);
 
 extern "C" fn set_finish(_: libc::c_int) {
@@ -80,14 +83,17 @@ macro_rules! test {
 fn main() -> Result<(), Box<dyn error::Error>> {
 
     unsafe {
+        // Initialize sigaction struct
         let mut action: libc::sigaction = mem::zeroed();
         action.sa_flags |= libc::SA_RESTART;
         test!(libc::sigemptyset(&mut action.sa_mask as _));
 
+        // Copy with respective sigaction function pointers
         let finish = libc::sigaction { sa_sigaction: set_finish as _, .. action };
         let resize = libc::sigaction { sa_sigaction: set_resize as _, .. action };
         let null = ptr::null::<libc::sigaction>() as _;
 
+        // Set signal handlers
         test!(libc::sigaction(libc::SIGINT, &finish, null));
         test!(libc::sigaction(libc::SIGTERM, &finish, null));
         test!(libc::sigaction(libc::SIGWINCH, &resize, null));
@@ -98,7 +104,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let mut stdin = io::stdin();
     let mut stdout = io::stdout();
     let mut term = term::Term::new(&mut stdin, &mut stdout)?;
-    let mut clock = view::Clock::start(
+    let mut clock = view::Clock::new(
         args.x,
         args.y,
         args.w,
@@ -110,7 +116,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         args.center,
         args.second,
         args.military,
-    )?;
+    );
 
     // Draw immediately for responsiveness
     let mut size = term.size()?;

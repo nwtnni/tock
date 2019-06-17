@@ -4,6 +4,7 @@ use chrono::prelude::*;
 
 use crate::font;
 
+/// Retrieves current date and time with provided formatting modifiers.
 pub fn now(tz: &str, second: bool, military: bool) -> (Date, Time) {
     let dt = chrono::Local::now();
     let date = Date::new(&dt, tz);
@@ -11,6 +12,7 @@ pub fn now(tz: &str, second: bool, military: bool) -> (Date, Time) {
     (date, time)
 }
 
+/// Represents time as bitmap digits for ease of diffing and drawing.
 #[derive(Copy, Clone, Debug)]
 pub enum Time {
     S24([u16; 8]),
@@ -115,6 +117,7 @@ impl std::ops::BitXor for Time {
     }
 }
 
+/// Represents the current date.
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct Date<'tz> {
     pub y: i32,
