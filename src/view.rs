@@ -106,6 +106,9 @@ impl<'tz> Clock<'tz> {
         // Scan through each digit
         for digit in 0..self.digits() {
 
+            // Skip digits with no difference
+            if draw[digit] == 0 { continue }
+
             let dx = self.x + ((font::W + 1) * self.w * digit as u16);
             let dy = self.y;
 
@@ -113,17 +116,19 @@ impl<'tz> Clock<'tz> {
             let mut mask = 0b1_000_000_000_000_000u16;
 
             for i in 0..15 {
+
                 mask >>= 1;
+
+                // Skip bits with no difference
                 if draw[digit] & mask == 0 { continue }
-                let on = time[digit] & mask > 0;
-                let width = self.w as usize;
+
+                // Write single row into buffer
                 let x = i % font::W * self.w + dx;
                 let y = i / font::W * self.h + dy;
-                for j in 0..self.h {
-                    self.brush.set(on);
-                    let goto = brush::Move(x, y + j);
-                    write!(out, "{}{}{:3$}", self.brush, goto, " ", width)?;
-                }
+                self.brush.set(time[digit] & mask > 0);
+                self.buffer.clear();
+                self.write_row_buffer();
+                self.render_row_buffer(x, y, &mut out)?;
             }
         }
 
@@ -151,25 +156,21 @@ impl<'tz> Clock<'tz> {
 
             // Scan through each digit
             for digit in 0..self.digits() {
-                let width = self.w as usize;
                 let mut mask = 1 << ((font::H - y) * font::W);
                 for _ in 0..font::W {
                     mask >>= 1;
                     self.brush.set(time[digit] & mask > 0);
-                    write!(&mut self.buffer, "{}{:2$}", self.brush, " ", width).unwrap();
+                    self.write_row_buffer();
                 }
                 self.brush.raise();
-                write!(&mut self.buffer, "{}{:2$}", self.brush, " ", width).unwrap();
+                self.write_row_buffer();
             }
 
-            for i in 0..self.h {
+            // Move to beginning of line
+            let x = self.x;
+            let y = self.y + y * self.h;
 
-                // Move to beginning of line
-                let x = self.x;
-                let y = self.y + y * self.h + i;
-                write!(out, "{}{}", brush::Move(x, y), self.buffer)?;
-
-            }
+            self.render_row_buffer(x, y, &mut out)?;
         }
 
         self.draw_date(&date, &mut out)?;
@@ -188,6 +189,21 @@ impl<'tz> Clock<'tz> {
         let date_y = self.y + self.height() + 1;
         let goto = brush::Move(date_x, date_y);
         write!(out, "{}{}{}", self.brush, goto, self.buffer)
+    }
+
+    /// Write a row (with current color and width) of a font bit into the buffer.
+    fn write_row_buffer(&mut self) {
+        write!(&mut self.buffer, "{}{:2$}", self.brush, " ", self.w as usize)
+            .expect("[INTERNAL ERROR]: writing into String failed");
+    }
+
+    /// Write a complete font bit to the screen.
+    /// Expects a valid row to be in the buffer.
+    fn render_row_buffer<W: io::Write>(&self, x: u16, y: u16, mut out: W) -> io::Result<()> {
+        for i in 0..self.h {
+            write!(out, "{}{}", brush::Move(x, y + i), self.buffer)?;
+        }
+        Ok(())
     }
 
     /// Get number of characters in current time format.

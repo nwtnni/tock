@@ -12,7 +12,7 @@ pub fn now(tz: &str, second: bool, military: bool) -> (Date, Time) {
     (date, time)
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, Eq)]
 pub struct Date<'tz> {
     date: chrono::DateTime<Local>,
     zone: &'tz str,
@@ -38,6 +38,17 @@ impl<'tz> Default for Date<'tz> {
             ),
             zone: "",
         }
+    }
+}
+
+impl<'tz> PartialEq for Date<'tz> {
+    fn eq(&self, rhs: &Self) -> bool {
+        let a = self.date.date();
+        let b = rhs.date.date();
+        a.day() == b.day() &&
+        a.month() == b.month() &&
+        a.year() == b.year() &&
+        self.zone == rhs.zone
     }
 }
 

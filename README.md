@@ -116,6 +116,10 @@ feature flag set are:
 
 ## Changelog
 
+- 0.1.4
+  * Refactor drawing algorithms for readability.
+  * Fix comparison function for Date to avoid redrawing .
+
 - 0.1.3
   * Draw clock to alternate screen buffer to avoid clearing user information. Thanks [@Canop][8]!
 
