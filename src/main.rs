@@ -5,7 +5,7 @@ use std::mem;
 use std::ptr;
 use std::sync::atomic;
 
-use structopt::StructOpt;
+use clap::Parser;
 
 mod brush;
 mod font;
@@ -16,35 +16,35 @@ mod view;
 /// A digital clock for the terminal, inspired by tty-clock.
 ///
 /// Defaults to 12-hour local time, no seconds, in the top left corner.
-#[derive(Debug, StructOpt)]
-#[structopt(name = "tock", about = "A digital clock for the terminal.")]
+#[derive(Parser, Debug)]
+#[clap(name = "tock", about = "A digital clock for the terminal.")]
 struct Opt {
     /// Horizontal 0-indexed position of top-left corner.
-    #[structopt(short = "x", long = "x", default_value = "1")]
+    #[clap(short = 'x', long = "x", default_value = "1")]
     x: u16,
 
     /// Vertical 0-indexed position of top-left corner.
-    #[structopt(short = "y", long = "y", default_value = "1")]
+    #[clap(short = 'y', long = "y", default_value = "1")]
     y: u16,
 
     /// Font width in characters per tile.
-    #[structopt(short = "w", long = "width", default_value = "2")]
+    #[clap(short = 'w', long = "width", default_value = "2")]
     w: u16,
 
     /// Font height in characters per tile.
-    #[structopt(short = "h", long = "height", default_value = "1")]
+    #[clap(short = 'h', long = "height", default_value = "1")]
     h: u16,
 
     /// Display seconds.
-    #[structopt(short = "s", long = "seconds")]
+    #[clap(short = 's', long = "seconds")]
     second: bool,
 
     /// Display military (24-hour) time.
-    #[structopt(short = "m", long = "military")]
+    #[clap(short = 'm', long = "military")]
     military: bool,
 
     /// Center the clock in the terminal. Overrides manual positioning.
-    #[structopt(short = "c", long = "center")]
+    #[clap(short = 'c', long = "center")]
     center: bool,
 
     /// Change the color of the time.
@@ -55,7 +55,7 @@ struct Opt {
     /// 8-bit or 24-bit colors.
     ///
     /// [0]: https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
-    #[structopt(short = "C", long = "color", default_value = "2")]
+    #[clap(short = 'C', long = "color", default_value = "2")]
     color: brush::Color,
 
     /// Change the date format.
@@ -66,7 +66,7 @@ struct Opt {
     /// string "Local" if `TZ` is not set.
     ///
     /// [0]: https://docs.rs/chrono/0.4.6/chrono/format/strftime/index.html
-    #[structopt(short = "f", long = "format", default_value = "%F | %Z")]
+    #[clap(short = 'f', long = "format", default_value = "%F | %Z")]
     format: String,
 }
 
