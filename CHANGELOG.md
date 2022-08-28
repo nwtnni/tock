@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Reduce build size on release.
+- Separate CHANGELOG from README.
+- Add Cargo.lock to repository.
+- Update dependencies to latest.
+
 ## 0.1.4
 
 - Refactor drawing algorithms for readability.
