@@ -114,25 +114,6 @@ feature flag set are:
 - `m`: Toggle military (24H) time.
 - `0`..=`7`: Change to corresponding ANSI color.
 
-## Changelog
-
-- 0.1.4
-  * Refactor drawing algorithms for readability.
-  * Fix comparison function for Date to avoid redrawing .
-
-- 0.1.3
-  * Draw clock to alternate screen buffer to avoid clearing user information. Thanks [@Canop][8]!
-
-- 0.1.2
-  * Fix README formatting (oops).
-
-- 0.1.1
-	* Implement support for date formatting strings via `-f` option.
-	* Fix logic in Brush abstraction by only setting `dried` flag after writing.
-
-- 0.1.0
-	* Initial release.
-
 ## References
 
 - [How Not to Write a Signal Handler][2]
