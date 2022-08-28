@@ -16,12 +16,17 @@ default = ["interactive"]
 interactive = []
 
 [dependencies]
-chrono = "0.4.22"
-libc = "0.2.132"
-clap = { version = "3.2.17", features = ["derive"] }
+chrono = { version = "0.4.22", features = ["clock"], default-features = false }
+libc = { version = "0.2.132" }
+clap = { version = "3.2.17", features = [
+  "std",
+  "derive",
+  "color",
+], default-features = false }
 
 [profile.release]
 opt-level = 'z'
 lto = true
 codegen-units = 1
+strip = true
 panic = 'abort'
