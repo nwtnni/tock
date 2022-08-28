@@ -1,6 +1,6 @@
+use std::cell;
 use std::fmt;
 use std::str;
-use std::cell;
 
 /// Clear the screen.
 pub const CLEAR: &'static str = "\x1B[2J";
@@ -45,7 +45,10 @@ pub struct Brush {
 impl Brush {
     pub fn new(color: Color) -> Self {
         Brush {
-            paint: Paint { color, ground: Ground::Back },
+            paint: Paint {
+                color,
+                ground: Ground::Back,
+            },
             dried: cell::Cell::new(true),
             on: false,
         }
@@ -53,8 +56,13 @@ impl Brush {
 
     pub fn dip(&mut self, color: Color) {
         let old = self.paint;
-        let new = Paint { color, ground: Ground::Back };
-        if self.on { self.dried.set(old == new && self.dried.get()); }
+        let new = Paint {
+            color,
+            ground: Ground::Back,
+        };
+        if self.on {
+            self.dried.set(old == new && self.dried.get());
+        }
         self.paint = new;
     }
 
@@ -70,8 +78,8 @@ impl Brush {
 
 impl fmt::Display for Brush {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        if self.dried.get()  {
-            return Ok(())
+        if self.dried.get() {
+            return Ok(());
         }
         self.dried.set(true);
         write!(fmt, "{}", if self.on { self.paint } else { RESET })
@@ -89,9 +97,9 @@ impl fmt::Display for Paint {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let g = self.ground as u8;
         match self.color {
-        | Color::C8(c) => write!(fmt, "\x1B[{};5;{}m", g, c.0),
-        | Color::C24(c) => write!(fmt, "\x1B[{};2;{};{};{}m", g, c.r, c.g, c.b),
-        | Color::Reset => write!(fmt, "\x1B[{}m", g + 1),
+            Color::C8(c) => write!(fmt, "\x1B[{};5;{}m", g, c.0),
+            Color::C24(c) => write!(fmt, "\x1B[{};2;{};{};{}m", g, c.r, c.g, c.b),
+            Color::Reset => write!(fmt, "\x1B[{}m", g + 1),
         }
     }
 }
@@ -116,19 +124,19 @@ impl str::FromStr for Color {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if let Ok(c) = s.parse::<u8>() {
-            return Ok(Color::C8(C8(c)))
+            return Ok(Color::C8(C8(c)));
         }
 
         let mut it = s.split(',');
 
         let (r, g, b) = match (it.next(), it.next(), it.next(), it.next()) {
-        | (Some(r), Some(g), Some(b), None) => (r, g, b),
-        | _ => return Err(format!("[USER ERROR]: invalid color specifier {}", s))
+            (Some(r), Some(g), Some(b), None) => (r, g, b),
+            _ => return Err(format!("[USER ERROR]: invalid color specifier {}", s)),
         };
 
         match (r.parse::<u8>(), g.parse::<u8>(), b.parse::<u8>()) {
-        | (Ok(r), Ok(g), Ok(b)) => Ok(Color::C24(C24 { r, g, b })),
-        | _ => return Err(format!("[USER ERROR]: invalid color specifier {}", s))
+            (Ok(r), Ok(g), Ok(b)) => Ok(Color::C24(C24 { r, g, b })),
+            _ => return Err(format!("[USER ERROR]: invalid color specifier {}", s)),
         }
     }
 }

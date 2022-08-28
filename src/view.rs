@@ -1,5 +1,5 @@
-use std::io;
 use std::fmt::Write;
+use std::io;
 
 use chrono::Timelike;
 
@@ -35,7 +35,6 @@ pub struct Clock<'tz> {
 }
 
 impl<'tz> Clock<'tz> {
-
     /// Create a new clock instance.
     pub fn new(
         x: u16,
@@ -50,8 +49,10 @@ impl<'tz> Clock<'tz> {
         format: String,
     ) -> Self {
         Clock {
-            x, y,
-            w, h,
+            x,
+            y,
+            w,
+            h,
             date: time::Date::default(),
             time: time::Time::blank(second, military),
             zone,
@@ -99,15 +100,15 @@ impl<'tz> Clock<'tz> {
 
     /// Draws the differences between the previous time and the next.
     pub fn update<W: io::Write>(&mut self, mut out: W) -> io::Result<()> {
-
         let (date, time) = time::now(&self.zone, self.second, self.military);
         let draw = self.time ^ time;
 
         // Scan through each digit
         for digit in 0..self.digits() {
-
             // Skip digits with no difference
-            if draw[digit] == 0 { continue }
+            if draw[digit] == 0 {
+                continue;
+            }
 
             let dx = self.x + ((font::W + 1) * self.w * digit as u16);
             let dy = self.y;
@@ -116,11 +117,12 @@ impl<'tz> Clock<'tz> {
             let mut mask = 0b1_000_000_000_000_000u16;
 
             for i in 0..15 {
-
                 mask >>= 1;
 
                 // Skip bits with no difference
-                if draw[digit] & mask == 0 { continue }
+                if draw[digit] & mask == 0 {
+                    continue;
+                }
 
                 // Write single row into buffer
                 let x = i % font::W * self.w + dx;
@@ -133,7 +135,9 @@ impl<'tz> Clock<'tz> {
         }
 
         // Only write date if it has changed
-        if date != self.date { self.draw_date(&date, &mut out)?; }
+        if date != self.date {
+            self.draw_date(&date, &mut out)?;
+        }
 
         out.flush()?;
         self.date = date;
@@ -143,7 +147,6 @@ impl<'tz> Clock<'tz> {
 
     /// Efficiently redraws the entire clock display.
     pub fn reset<W: io::Write>(&mut self, mut out: W) -> io::Result<()> {
-
         let (date, time) = time::now(self.zone, self.second, self.military);
 
         self.brush.raise();
@@ -151,7 +154,6 @@ impl<'tz> Clock<'tz> {
 
         // Scan through each row
         for y in 0..font::H {
-
             self.buffer.clear();
 
             // Scan through each digit
@@ -193,8 +195,12 @@ impl<'tz> Clock<'tz> {
 
     /// Write a row (with current color and width) of a font bit into the buffer.
     fn write_row_buffer(&mut self) {
-        write!(&mut self.buffer, "{}{:2$}", self.brush, " ", self.w as usize)
-            .expect("[INTERNAL ERROR]: writing into String failed");
+        write!(
+            &mut self.buffer,
+            "{}{:2$}",
+            self.brush, " ", self.w as usize
+        )
+        .expect("[INTERNAL ERROR]: writing into String failed");
     }
 
     /// Write a complete font bit to the screen.

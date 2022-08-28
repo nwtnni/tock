@@ -42,7 +42,7 @@ struct Opt {
     /// Display military (24-hour) time.
     #[structopt(short = "m", long = "military")]
     military: bool,
-    
+
     /// Center the clock in the terminal. Overrides manual positioning.
     #[structopt(short = "c", long = "center")]
     center: bool,
@@ -87,13 +87,12 @@ extern "C" fn set_resize(_: libc::c_int) {
 macro_rules! test {
     ($call:expr) => {
         if $call != 0 {
-            return Err(Box::new(io::Error::last_os_error()))
+            return Err(Box::new(io::Error::last_os_error()));
         }
-    }
+    };
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
-
     unsafe {
         // Initialize sigaction struct
         let mut action: libc::sigaction = mem::zeroed();
@@ -101,8 +100,14 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         test!(libc::sigemptyset(&mut action.sa_mask as _));
 
         // Copy with respective sigaction function pointers
-        let finish = libc::sigaction { sa_sigaction: set_finish as _, .. action };
-        let resize = libc::sigaction { sa_sigaction: set_resize as _, .. action };
+        let finish = libc::sigaction {
+            sa_sigaction: set_finish as _,
+            ..action
+        };
+        let resize = libc::sigaction {
+            sa_sigaction: set_resize as _,
+            ..action
+        };
         let null = ptr::null::<libc::sigaction>() as _;
 
         // Set signal handlers
@@ -121,9 +126,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         args.y,
         args.w,
         args.h,
-        zone.as_ref()
-            .map(String::as_str)
-            .unwrap_or("Local"),
+        zone.as_ref().map(String::as_str).unwrap_or("Local"),
         args.color,
         args.center,
         args.second,
@@ -137,7 +140,6 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     clock.reset(&mut term)?;
 
     'main: while !FINISH.load(atomic::Ordering::Relaxed) {
-
         let mut dirty = false;
 
         if RESIZE.load(atomic::Ordering::Relaxed) {
@@ -150,26 +152,28 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         #[cfg(feature = "interactive")]
         while let Some(c) = term.poll() {
             match c {
-            | 'q' | 'Q' | '\x1B' => break 'main,
-            | 's' => {
-                dirty = true;
-                clock.toggle_second();
-                clock.resize(size);
-            }
-            | 'm' => {
-                dirty = true;
-                clock.toggle_military();
-                clock.resize(size);
-            }
-            | '0' ..= '7' => {
-                dirty = true; 
-                clock.set_color(brush::Color::C8(brush::C8(c as u8 - 48)));
-            }
-            | _ => (),
+                'q' | 'Q' | '\x1B' => break 'main,
+                's' => {
+                    dirty = true;
+                    clock.toggle_second();
+                    clock.resize(size);
+                }
+                'm' => {
+                    dirty = true;
+                    clock.toggle_military();
+                    clock.resize(size);
+                }
+                '0'..='7' => {
+                    dirty = true;
+                    clock.set_color(brush::Color::C8(brush::C8(c as u8 - 48)));
+                }
+                _ => (),
             }
         }
 
-        if dirty { clock.reset(&mut term)?; }
+        if dirty {
+            clock.reset(&mut term)?;
+        }
         clock.sync();
         clock.update(&mut term)?;
     }
