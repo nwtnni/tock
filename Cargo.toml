@@ -16,8 +16,8 @@ default = ["interactive"]
 interactive = []
 
 [dependencies]
-chrono = "0.4.6"
-libc = "0.2.58"
+chrono = "0.4.22"
+libc = "0.2.132"
 structopt = "0.2.16"
 
 [profile.release]
