@@ -36,7 +36,7 @@ impl<'main> Term<'main> {
             test!(libc::tcgetattr(libc::STDIN_FILENO, &mut termios));
 
             // Change to non-canonical mode
-            let mut set = termios.clone();
+            let mut set = termios;
             set.c_lflag &= !(libc::ICANON | libc::ECHO);
             set.c_cc[libc::VMIN] = 0;
             set.c_cc[libc::VTIME] = 0;
@@ -64,7 +64,7 @@ impl<'main> Term<'main> {
             let mut size: libc::winsize = mem::zeroed();
             test!(libc::ioctl(
                 libc::STDIN_FILENO,
-                libc::TIOCGWINSZ.into(),
+                libc::TIOCGWINSZ,
                 &mut size
             ));
             Ok((size.ws_col, size.ws_row))

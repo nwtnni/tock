@@ -100,7 +100,7 @@ impl<'tz> Clock<'tz> {
 
     /// Draws the differences between the previous time and the next.
     pub fn update<W: io::Write>(&mut self, mut out: W) -> io::Result<()> {
-        let (date, time) = time::now(&self.zone, self.second, self.military);
+        let (date, time) = time::now(self.zone, self.second, self.military);
         let draw = self.time ^ time;
 
         // Scan through each digit
@@ -114,7 +114,7 @@ impl<'tz> Clock<'tz> {
             let dy = self.y;
 
             // Scan through all bits in digit
-            let mut mask = 0b1_000_000_000_000_000u16;
+            let mut mask = 0b1000_0000_0000_0000_u16;
 
             for i in 0..15 {
                 mask >>= 1;
@@ -224,6 +224,6 @@ impl<'tz> Clock<'tz> {
 
     /// Get current clock height in characters.
     pub fn height(&self) -> u16 {
-        (self.h * font::H)
+        self.h * font::H
     }
 }

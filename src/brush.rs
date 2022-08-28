@@ -3,19 +3,19 @@ use std::fmt;
 use std::str;
 
 /// Clear the screen.
-pub const CLEAR: &'static str = "\x1B[2J";
+pub const CLEAR: &str = "\x1B[2J";
 
 /// Switch to main screen buffer.
-pub const MAIN: &'static str = "\x1B[?1049l";
+pub const MAIN: &str = "\x1B[?1049l";
 
 /// Switch to alternate screen buffer.
-pub const ALTERNATE: &'static str = "\x1B[?1049h";
+pub const ALTERNATE: &str = "\x1B[?1049h";
 
 /// Hide the cursor.
-pub const HIDE: &'static str = "\x1B[?25l";
+pub const HIDE: &str = "\x1B[?25l";
 
 /// Show the cursor.
-pub const SHOW: &'static str = "\x1B[?25h";
+pub const SHOW: &str = "\x1B[?25h";
 
 /// Reset the background color.
 pub const RESET: Paint = Paint {
@@ -136,7 +136,7 @@ impl str::FromStr for Color {
 
         match (r.parse::<u8>(), g.parse::<u8>(), b.parse::<u8>()) {
             (Ok(r), Ok(g), Ok(b)) => Ok(Color::C24(C24 { r, g, b })),
-            _ => return Err(format!("[USER ERROR]: invalid color specifier {}", s)),
+            _ => Err(format!("[USER ERROR]: invalid color specifier {}", s)),
         }
     }
 }
