@@ -30,79 +30,78 @@ Currently requires a Rust installation, and is only available from either:
 
 1. [crates.io][1]
 
-```
-$ cargo install tock
+```sh
+cargo install tock
 ```
 
-2. Building from source
+1. Building from source
 
-```
-$ git clone https://github.com/nwtnni/tock.git
-$ cargo build --release
-$ ./target/release/tock
+```sh
+git clone https://github.com/nwtnni/tock.git
+cargo build --release
+./target/release/tock
 ```
 
 ## Usage
 
-```
+```output
 USAGE:
-    tock [FLAGS] [OPTIONS]
-
-FLAGS:
-    -c, --center
-            Center the clock in the terminal.
-            Overrides manual positioning.
-
-        --help
-            Prints help information
-
-    -m, --military
-            Display military (24-hour) time.
-
-    -s, --seconds
-            Display seconds.
-
-    -V, --version
-            Prints version information
-
+    tock [OPTIONS]
 
 OPTIONS:
-    -C, --color <color>
+    -c, --center
+            Center the clock in the terminal. Overrides manual positioning
+
+    -C, --color <COLOR>
             Change the color of the time.
 
-            Accepts either a [single 8-bit number][0] or
-            three comma-separated 8-bit numbers in R,G,B format.
-            Does not check if your terminal supports the
-            entire range of 8-bit or 24-bit colors.
+            Accepts either a [single 8-bit number][0] or three comma-separated 8-bit numbers in
+            R,G,B format. Does not check if your terminal supports the entire range of 8-bit or
+            24-bit colors.
 
             [0]: https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
 
             [default: 2]
 
-    -f, --format <format>
+    -f, --format <FORMAT>
             Change the date format.
 
-            Accepts a format string using [strftime][0] notation.
-            Note that occurrences of the `%Z` specifier are
-            naively replaced with the contents of the `TZ` environment
-            variable, or the string "Local" if `TZ` is not set.
+            Accepts a format string using [strftime][0] notation. Note that occurrences of the `%Z`
+            specifier are naively replaced with the contents of the `TZ` environment variable, or
+            the string "Local" if `TZ` is not set.
 
             [0]: https://docs.rs/chrono/0.4.6/chrono/format/strftime/index.html
 
-            [default: %F | %Z]
+            [default: "%F | %Z"]
 
-    -h, --height <h>
-            Font height in characters per tile. [default: 1]
-
-    -w, --width <w>
-            Font width in characters per tile. [default: 2]
-
-    -x, --x <x>
-            Horizontal 0-indexed position of top-left corner.
+    -h, --height <H>
+            Font height in characters per tile
 
             [default: 1]
 
-    -y, --y <y>
+        --help
+            Print help information
+
+    -m, --military
+            Display military (24-hour) time
+
+    -s, --seconds
+            Display seconds
+
+    -w, --width <W>
+            Font width in characters per tile
+
+            [default: 2]
+
+    -x, --x <X>
+            Horizontal 0-indexed position of top-left corner
+
+            [default: 1]
+
+    -y, --y <Y>
+            Vertical 0-indexed position of top-left corner
+
+            [default: 1]
 ```
 
 Currently compiles with the `interactive` feature flag set by default, which
