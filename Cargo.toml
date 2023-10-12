@@ -16,9 +16,9 @@ default = ["interactive"]
 interactive = []
 
 [dependencies]
-chrono = { version = "0.4.22", features = ["clock"], default-features = false }
-libc = { version = "0.2.132" }
-clap = { version = "3.2.17", features = [
+chrono = { version = "0.4", features = ["clock"], default-features = false }
+libc = { version = "0.2" }
+clap = { version = "4.4", features = [
   "std",
   "derive",
   "color",

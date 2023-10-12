@@ -116,7 +116,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         test!(libc::sigaction(libc::SIGWINCH, &resize, null));
     }
 
-    let args = Opt::from_args();
+    let args = Opt::parse();
     let zone = env::var("TZ");
     let mut stdin = io::stdin();
     let mut stdout = io::stdout();
