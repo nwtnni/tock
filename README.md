@@ -74,7 +74,7 @@ OPTIONS:
 
             [default: "%F | %Z"]
 
-    -h, --height <H>
+    -h, --height <HEIGHT>
             Font height in characters per tile
 
             [default: 1]
@@ -88,7 +88,7 @@ OPTIONS:
     -s, --seconds
             Display seconds
 
-    -w, --width <W>
+    -w, --width <WIDTH>
             Font width in characters per tile
 
             [default: 2]
@@ -96,12 +96,12 @@ OPTIONS:
     -x, --x <X>
             Horizontal 0-indexed position of top-left corner
 
-            [default: 1]
+            [default: 0]
 
     -y, --y <Y>
             Vertical 0-indexed position of top-left corner
 
-            [default: 1]
+            [default: 0]
 ```
 
 Currently compiles with the `interactive` feature flag set by default, which

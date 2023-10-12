@@ -1,4 +1,3 @@
-use std::env;
 use std::error;
 use std::io;
 use std::mem;
@@ -6,69 +5,13 @@ use std::ptr;
 use std::sync::atomic;
 
 use clap::Parser;
+use view::Configuration;
 
 mod brush;
 mod font;
 mod term;
 mod time;
 mod view;
-
-/// A digital clock for the terminal, inspired by tty-clock.
-///
-/// Defaults to 12-hour local time, no seconds, in the top left corner.
-#[derive(Parser, Debug)]
-#[clap(name = "tock", about = "A digital clock for the terminal.")]
-struct Opt {
-    /// Horizontal 0-indexed position of top-left corner.
-    #[clap(short = 'x', long = "x", default_value = "1")]
-    x: u16,
-
-    /// Vertical 0-indexed position of top-left corner.
-    #[clap(short = 'y', long = "y", default_value = "1")]
-    y: u16,
-
-    /// Font width in characters per tile.
-    #[clap(short = 'W', long = "width", default_value = "2")]
-    w: u16,
-
-    /// Font height in characters per tile.
-    #[clap(short = 'H', long = "height", default_value = "1")]
-    h: u16,
-
-    /// Display seconds.
-    #[clap(short = 's', long = "seconds")]
-    second: bool,
-
-    /// Display military (24-hour) time.
-    #[clap(short = 'm', long = "military")]
-    military: bool,
-
-    /// Center the clock in the terminal. Overrides manual positioning.
-    #[clap(short = 'c', long = "center")]
-    center: bool,
-
-    /// Change the color of the time.
-    ///
-    /// Accepts either a [single 8-bit number][0] or three
-    /// comma-separated 8-bit numbers in R,G,B format. Does
-    /// not check if your terminal supports the entire range of
-    /// 8-bit or 24-bit colors.
-    ///
-    /// [0]: https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
-    #[clap(short = 'C', long = "color", default_value = "2")]
-    color: brush::Color,
-
-    /// Change the date format.
-    ///
-    /// Accepts a format string using [strftime][0] notation. Note
-    /// that occurrences of the `%Z` specifier are naively replaced
-    /// with the contents of the `TZ` environment variable, or the
-    /// string "Local" if `TZ` is not set.
-    ///
-    /// [0]: https://docs.rs/chrono/0.4.6/chrono/format/strftime/index.html
-    #[clap(short = 'f', long = "format", default_value = "%F | %Z")]
-    format: String,
-}
 
 /// Signal flag for interrupts.
 static FINISH: atomic::AtomicBool = atomic::AtomicBool::new(false);
@@ -93,6 +36,8 @@ macro_rules! test {
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
+    let configuration = Configuration::parse();
+
     unsafe {
         // Initialize sigaction struct
         let mut action: libc::sigaction = mem::zeroed();
@@ -116,23 +61,10 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         test!(libc::sigaction(libc::SIGWINCH, &resize, null));
     }
 
-    let args = Opt::parse();
-    let zone = env::var("TZ");
     let mut stdin = io::stdin();
     let mut stdout = io::stdout();
     let mut term = term::Term::new(&mut stdin, &mut stdout)?;
-    let mut clock = view::Clock::new(
-        args.x,
-        args.y,
-        args.w,
-        args.h,
-        zone.as_ref().map(String::as_str).unwrap_or("Local"),
-        args.color,
-        args.center,
-        args.second,
-        args.military,
-        args.format,
-    );
+    let mut clock = view::Clock::new(configuration);
 
     // Draw immediately for responsiveness
     let mut size = term.size()?;

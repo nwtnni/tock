@@ -5,49 +5,30 @@ use chrono::prelude::*;
 use crate::font;
 
 /// Retrieves current date and time with provided formatting modifiers.
-pub fn now(tz: &str, second: bool, military: bool) -> (Date, Time) {
-    let dt = chrono::Local::now().naive_local();
-    let date = Date::new(dt.date(), tz);
-    let time = Time::new(dt.time(), second, military);
+pub fn now(second: bool, military: bool) -> (Date, Time) {
+    let now = chrono::Local::now().naive_local();
+    let date = Date::new(now.date());
+    let time = Time::new(now.time(), second, military);
     (date, time)
 }
 
-#[derive(Clone, Debug, Eq)]
-pub struct Date<'tz> {
-    date: chrono::NaiveDate,
-    zone: &'tz str,
-}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Date(chrono::NaiveDate);
 
-impl<'tz> Date<'tz> {
-    pub fn new(date: chrono::NaiveDate, zone: &'tz str) -> Self {
-        Date { date, zone }
+impl Date {
+    pub fn new(date: chrono::NaiveDate) -> Self {
+        Self(date)
     }
 
     pub fn blank() -> Self {
-        Date {
-            date: chrono::NaiveDate::from_num_days_from_ce_opt(1)
+        Self(
+            chrono::NaiveDate::from_num_days_from_ce_opt(1)
                 .expect("[INTERNAL ERROR]: 1 is a valid offset"),
-            zone: "",
-        }
-    }
-
-    // TODO: can we get rid of this heap allocation?
-    pub fn format(&self, fmt: &str, buffer: &mut String) {
-        write!(
-            buffer,
-            "{}",
-            self.date.format(&fmt.replace("%Z", self.zone))
         )
-        .unwrap()
     }
-}
 
-impl<'tz> PartialEq for Date<'tz> {
-    fn eq(&self, other: &Self) -> bool {
-        self.date.day() == other.date.day()
-            && self.date.month() == other.date.month()
-            && self.date.year() == other.date.year()
-            && self.zone == other.zone
+    pub fn format(&self, format: &str, buffer: &mut String) {
+        write!(buffer, "{}", self.0.format(format)).unwrap()
     }
 }
 
