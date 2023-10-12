@@ -7,6 +7,8 @@
 - Add Cargo.lock to repository.
 - Update dependencies to latest.
 
+Thanks [@nix6839](https://github.com/nix6839)!
+
 ## 0.1.4
 
 - Refactor drawing algorithms for readability.
