@@ -19,9 +19,11 @@ interactive = []
 chrono = { version = "0.4", features = ["clock"], default-features = false }
 libc = { version = "0.2" }
 clap = { version = "4.4", features = [
-  "std",
-  "derive",
   "color",
+  "derive",
+  "help",
+  "std",
+  "usage",
 ], default-features = false }
 
 [profile.release]

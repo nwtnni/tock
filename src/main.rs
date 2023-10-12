@@ -28,11 +28,11 @@ struct Opt {
     y: u16,
 
     /// Font width in characters per tile.
-    #[clap(short = 'w', long = "width", default_value = "2")]
+    #[clap(short = 'W', long = "width", default_value = "2")]
     w: u16,
 
     /// Font height in characters per tile.
-    #[clap(short = 'h', long = "height", default_value = "1")]
+    #[clap(short = 'H', long = "height", default_value = "1")]
     h: u16,
 
     /// Display seconds.

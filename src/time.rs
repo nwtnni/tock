@@ -6,23 +6,28 @@ use crate::font;
 
 /// Retrieves current date and time with provided formatting modifiers.
 pub fn now(tz: &str, second: bool, military: bool) -> (Date, Time) {
-    let dt = chrono::Local::now();
-    let date = Date::new(&dt, tz);
-    let time = Time::new(&dt, second, military);
+    let dt = chrono::Local::now().naive_local();
+    let date = Date::new(dt.date(), tz);
+    let time = Time::new(dt.time(), second, military);
     (date, time)
 }
 
 #[derive(Clone, Debug, Eq)]
 pub struct Date<'tz> {
-    date: chrono::DateTime<Local>,
+    date: chrono::NaiveDate,
     zone: &'tz str,
 }
 
 impl<'tz> Date<'tz> {
-    pub fn new(dt: &chrono::DateTime<chrono::Local>, tz: &'tz str) -> Self {
+    pub fn new(date: chrono::NaiveDate, zone: &'tz str) -> Self {
+        Date { date, zone }
+    }
+
+    pub fn blank() -> Self {
         Date {
-            date: *dt,
-            zone: tz,
+            date: chrono::NaiveDate::from_num_days_from_ce_opt(1)
+                .expect("[INTERNAL ERROR]: 1 is a valid offset"),
+            zone: "",
         }
     }
 
@@ -37,26 +42,12 @@ impl<'tz> Date<'tz> {
     }
 }
 
-impl<'tz> Default for Date<'tz> {
-    fn default() -> Self {
-        Date {
-            date: chrono::DateTime::from_utc(
-                chrono::NaiveDate::from_ymd(1, 1, 1).and_hms(1, 1, 1),
-                chrono::offset::FixedOffset::east(0),
-            ),
-            zone: "",
-        }
-    }
-}
-
 impl<'tz> PartialEq for Date<'tz> {
-    fn eq(&self, rhs: &Self) -> bool {
-        let a = self.date.date();
-        let b = rhs.date.date();
-        a.day() == b.day()
-            && a.month() == b.month()
-            && a.year() == b.year()
-            && self.zone == rhs.zone
+    fn eq(&self, other: &Self) -> bool {
+        self.date.day() == other.date.day()
+            && self.date.month() == other.date.month()
+            && self.date.year() == other.date.year()
+            && self.zone == other.zone
     }
 }
 
@@ -88,7 +79,7 @@ impl Time {
         }
     }
 
-    fn new<T: Timelike>(time: &T, second: bool, military: bool) -> Self {
+    fn new(time: NaiveTime, second: bool, military: bool) -> Self {
         use font::*;
         let m = time.minute() as usize;
         match (second, military) {

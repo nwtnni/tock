@@ -53,7 +53,7 @@ impl<'tz> Clock<'tz> {
             y,
             w,
             h,
-            date: time::Date::default(),
+            date: time::Date::blank(),
             time: time::Time::blank(second, military),
             zone,
             brush: brush::Brush::new(color),
