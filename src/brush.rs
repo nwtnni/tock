@@ -1,4 +1,4 @@
-use std::cell;
+use std::cell::Cell;
 use std::fmt;
 use std::str;
 
@@ -38,7 +38,7 @@ impl fmt::Display for Move {
 #[derive(Clone, Debug)]
 pub struct Brush {
     paint: Paint,
-    dried: cell::Cell<bool>,
+    dried: Cell<bool>,
     on: bool,
 }
 
@@ -49,7 +49,7 @@ impl Brush {
                 color,
                 ground: Ground::Back,
             },
-            dried: cell::Cell::new(true),
+            dried: Cell::new(true),
             on: false,
         }
     }

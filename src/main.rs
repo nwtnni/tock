@@ -2,9 +2,12 @@ use std::error;
 use std::io;
 use std::mem;
 use std::ptr;
-use std::sync::atomic;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
 
 use clap::Parser;
+use term::Term;
+use view::Clock;
 use view::Configuration;
 
 mod brush;
@@ -14,17 +17,17 @@ mod time;
 mod view;
 
 /// Signal flag for interrupts.
-static FINISH: atomic::AtomicBool = atomic::AtomicBool::new(false);
+static FINISH: AtomicBool = AtomicBool::new(false);
 
 /// Signal flag for window size changes.
-static RESIZE: atomic::AtomicBool = atomic::AtomicBool::new(false);
+static RESIZE: AtomicBool = AtomicBool::new(false);
 
 extern "C" fn set_finish(_: libc::c_int) {
-    FINISH.store(true, atomic::Ordering::Relaxed)
+    FINISH.store(true, Ordering::Relaxed)
 }
 
 extern "C" fn set_resize(_: libc::c_int) {
-    RESIZE.store(true, atomic::Ordering::Relaxed)
+    RESIZE.store(true, Ordering::Relaxed)
 }
 
 macro_rules! test {
@@ -63,19 +66,19 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     let mut stdin = io::stdin();
     let mut stdout = io::stdout();
-    let mut term = term::Term::new(&mut stdin, &mut stdout)?;
-    let mut clock = view::Clock::new(configuration);
+    let mut term = Term::new(&mut stdin, &mut stdout)?;
+    let mut clock = Clock::new(configuration);
 
     // Draw immediately for responsiveness
     let mut size = term.size()?;
     clock.resize(size);
     clock.reset(&mut term)?;
 
-    'main: while !FINISH.load(atomic::Ordering::Relaxed) {
+    'main: while !FINISH.load(Ordering::Relaxed) {
         let mut dirty = false;
 
-        if RESIZE.load(atomic::Ordering::Relaxed) {
-            RESIZE.store(false, atomic::Ordering::Relaxed);
+        if RESIZE.load(Ordering::Relaxed) {
+            RESIZE.store(false, Ordering::Relaxed);
             dirty = true;
             size = term.size()?;
             clock.resize(size);
@@ -97,7 +100,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                 }
                 '0'..='7' => {
                     dirty = true;
-                    clock.set_color(brush::Color::C8(brush::C8(c as u8 - 48)));
+                    clock.set_color(brush::Color::C8(brush::C8(c as u8 - b'0')));
                 }
                 _ => (),
             }

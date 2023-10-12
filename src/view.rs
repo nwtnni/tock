@@ -1,14 +1,21 @@
 use std::env;
-use std::fmt::Write;
+use std::fmt::Write as _;
 use std::io;
+use std::io::Write;
+use std::thread;
+use std::time::Duration;
 
+use chrono::Local;
 use chrono::Timelike as _;
 use clap::Parser;
 
 use crate::brush;
 use crate::brush::Brush;
+use crate::brush::Color;
 use crate::font;
 use crate::time;
+use crate::time::Date;
+use crate::time::Time;
 
 /// A digital clock for the terminal, inspired by tty-clock.
 ///
@@ -53,7 +60,7 @@ pub struct Configuration {
     ///
     /// [0]: https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
     #[clap(short = 'C', long, default_value = "2")]
-    color: brush::Color,
+    color: Color,
 
     /// Change the date format.
     ///
@@ -80,8 +87,8 @@ pub struct Configuration {
 #[derive(Debug)]
 pub struct Clock {
     configuration: Configuration,
-    date: time::Date,
-    time: time::Time,
+    date: Date,
+    time: Time,
     brush: Brush,
     buffer: String,
 }
@@ -93,9 +100,9 @@ impl Clock {
         configuration.format = configuration.format.replace("%Z", &zone);
 
         Clock {
-            date: time::Date::blank(),
-            time: time::Time::blank(configuration.second, configuration.military),
-            brush: brush::Brush::new(configuration.color),
+            date: Date::blank(),
+            time: Time::blank(configuration.second, configuration.military),
+            brush: Brush::new(configuration.color),
             buffer: String::new(),
             configuration,
         }
@@ -112,7 +119,7 @@ impl Clock {
     }
 
     /// Set the color of the clock's time display.
-    pub fn set_color(&mut self, color: brush::Color) {
+    pub fn set_color(&mut self, color: Color) {
         self.brush.dip(color)
     }
 
@@ -126,13 +133,13 @@ impl Clock {
 
     /// Sleeps until approximately the next second boundary.
     pub fn sync(&self) {
-        let start = chrono::Local::now().nanosecond() as u64;
-        let delay = std::time::Duration::from_nanos(1_000_000_000 - start);
-        std::thread::sleep(delay);
+        let start = Local::now().nanosecond() as u64;
+        let delay = Duration::from_nanos(1_000_000_000 - start);
+        thread::sleep(delay);
     }
 
     /// Draws the differences between the previous time and the next.
-    pub fn update<W: io::Write>(&mut self, mut out: W) -> io::Result<()> {
+    pub fn update<W: Write>(&mut self, mut out: W) -> io::Result<()> {
         let (date, time) = time::now(self.configuration.second, self.configuration.military);
         let draw = self.time ^ time;
 
@@ -180,7 +187,7 @@ impl Clock {
     }
 
     /// Efficiently redraws the entire clock display.
-    pub fn reset<W: io::Write>(&mut self, mut out: W) -> io::Result<()> {
+    pub fn reset<W: Write>(&mut self, mut out: W) -> io::Result<()> {
         let (date, time) = time::now(self.configuration.second, self.configuration.military);
 
         self.brush.raise();
@@ -217,7 +224,7 @@ impl Clock {
     }
 
     /// Draw the current date.
-    fn draw_date<W: io::Write>(&mut self, date: &time::Date, out: &mut W) -> io::Result<()> {
+    fn draw_date<W: Write>(&mut self, date: &Date, out: &mut W) -> io::Result<()> {
         self.brush.raise();
         self.buffer.clear();
         date.format(&self.configuration.format, &mut self.buffer);
@@ -239,7 +246,7 @@ impl Clock {
 
     /// Write a complete font bit to the screen.
     /// Expects a valid row to be in the buffer.
-    fn render_row_buffer<W: io::Write>(&self, x: u16, y: u16, mut out: W) -> io::Result<()> {
+    fn render_row_buffer<W: Write>(&self, x: u16, y: u16, mut out: W) -> io::Result<()> {
         for i in 0..self.configuration.height {
             write!(out, "{}{}", brush::Move(x, y + i), self.buffer)?;
         }
@@ -248,7 +255,7 @@ impl Clock {
 
     /// Get number of characters in current time format.
     fn digits(&self) -> usize {
-        time::Time::width(self.configuration.second, self.configuration.military)
+        Time::width(self.configuration.second, self.configuration.military)
     }
 
     /// Get current clock width in characters.
