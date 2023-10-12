@@ -64,9 +64,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         test!(libc::sigaction(libc::SIGWINCH, &resize, null));
     }
 
-    let mut stdin = io::stdin();
-    let mut stdout = io::stdout();
-    let mut term = Term::new(&mut stdin, &mut stdout)?;
+    let mut term = Term::new()?;
     let mut clock = Clock::new(configuration);
 
     // Draw immediately for responsiveness

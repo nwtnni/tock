@@ -4,10 +4,10 @@ use std::mem;
 use crate::brush;
 
 /// Non-canonical mode terminal.
-pub struct Term<'main> {
+pub struct Term {
     termios: libc::termios,
-    stdin: io::StdinLock<'main>,
-    stdout: io::StdoutLock<'main>,
+    stdin: io::StdinLock<'static>,
+    stdout: io::StdoutLock<'static>,
     buffer: [u8; 1],
 }
 
@@ -19,8 +19,8 @@ macro_rules! test {
     };
 }
 
-impl<'main> Term<'main> {
-    pub fn new(stdin: &'main mut io::Stdin, stdout: &'main mut io::Stdout) -> io::Result<Self> {
+impl Term {
+    pub fn new() -> io::Result<Self> {
         let termios = unsafe {
             // Ensure that we have a tty device
             if libc::isatty(libc::STDIN_FILENO) != 1 || libc::isatty(libc::STDOUT_FILENO) != 1 {
@@ -46,8 +46,8 @@ impl<'main> Term<'main> {
         };
 
         // Hold onto locks
-        let stdin = stdin.lock();
-        let mut stdout = stdout.lock();
+        let stdin = io::stdin().lock();
+        let mut stdout = io::stdout().lock();
         write!(stdout, "{}{}", brush::ALTERNATE, brush::HIDE)?;
         Ok(Term {
             termios,
@@ -75,7 +75,7 @@ impl<'main> Term<'main> {
     }
 }
 
-impl<'main> io::Write for Term<'main> {
+impl io::Write for Term {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.stdout.write(buf)
     }
@@ -84,7 +84,7 @@ impl<'main> io::Write for Term<'main> {
     }
 }
 
-impl<'main> Drop for Term<'main> {
+impl Drop for Term {
     /// Restore initial termios settings and clear the screen.
     fn drop(&mut self) {
         unsafe {
