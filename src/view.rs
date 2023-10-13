@@ -109,16 +109,19 @@ impl Clock {
     }
 
     /// Toggle second display.
+    #[cfg_attr(not(feature = "interactive"), allow(unused))]
     pub fn toggle_second(&mut self) {
         self.configuration.second ^= true;
     }
 
     /// Toggle military (24H) time.
+    #[cfg_attr(not(feature = "interactive"), allow(unused))]
     pub fn toggle_military(&mut self) {
         self.configuration.military ^= true;
     }
 
     /// Set the color of the clock's time display.
+    #[cfg_attr(not(feature = "interactive"), allow(unused))]
     pub fn set_color(&mut self, color: Color) {
         self.brush.dip(color)
     }

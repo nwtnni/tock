@@ -70,6 +70,7 @@ impl Term {
     }
 
     /// Non-blocking poll for user input.
+    #[cfg_attr(not(feature = "interactive"), allow(unused))]
     pub fn poll(&mut self) -> Option<char> {
         match self.stdin.read_exact(&mut self.buffer) {
             Ok(_) => Some(self.buffer[0] as char),

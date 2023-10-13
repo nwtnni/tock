@@ -72,7 +72,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     clock.resize(size);
     clock.reset(&mut term)?;
 
-    'main: while !FINISH.load(Ordering::Relaxed) {
+    while !FINISH.load(Ordering::Relaxed) {
         let mut dirty = false;
 
         if RESIZE.load(Ordering::Relaxed) {
@@ -85,7 +85,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         #[cfg(feature = "interactive")]
         while let Some(c) = term.poll() {
             match c {
-                'q' | 'Q' | '\x1B' => break 'main,
+                'q' | 'Q' | '\x1B' => return Ok(()),
                 's' => {
                     dirty = true;
                     clock.toggle_second();
