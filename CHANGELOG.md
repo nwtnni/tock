@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1
+
+- Condense and fix help text in README.
+
 ## 1.0.0
 
 - Reduce build size on release.

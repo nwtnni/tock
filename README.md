@@ -26,15 +26,17 @@ Note: emulating all features of tty-clock is **not** a goal of this project.
 
 ## Installation
 
-Currently requires a Rust installation, and is only available from either:
+Currently requires a Rust installation with version >= 1.70.0
+(due to the [`IsTerminal`](https://doc.rust-lang.org/stable/std/io/trait.IsTerminal.html) trait,
+and is only available from either:
 
-1. [crates.io][1]
+1. [crates.io][1] using [`cargo-install`](https://doc.rust-lang.org/cargo/commands/cargo-install.html)
 
 ```sh
 cargo install tock
 ```
 
-1. Building from source
+2. Building from source
 
 ```sh
 git clone https://github.com/nwtnni/tock.git
@@ -45,63 +47,21 @@ cargo build --release
 ## Usage
 
 ```output
-USAGE:
-    tock [OPTIONS]
+A digital clock for the terminal.
 
-OPTIONS:
-    -c, --center
-            Center the clock in the terminal. Overrides manual positioning
+Usage: tock [OPTIONS]
 
-    -C, --color <COLOR>
-            Change the color of the time.
-
-            Accepts either a [single 8-bit number][0] or three comma-separated 8-bit numbers in
-            R,G,B format. Does not check if your terminal supports the entire range of 8-bit or
-            24-bit colors.
-
-            [0]: https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
-
-            [default: 2]
-
-    -f, --format <FORMAT>
-            Change the date format.
-
-            Accepts a format string using [strftime][0] notation. Note that occurrences of the `%Z`
-            specifier are naively replaced with the contents of the `TZ` environment variable, or
-            the string "Local" if `TZ` is not set.
-
-            [0]: https://docs.rs/chrono/0.4.6/chrono/format/strftime/index.html
-
-            [default: "%F | %Z"]
-
-    -h, --height <HEIGHT>
-            Font height in characters per tile
-
-            [default: 1]
-
-        --help
-            Print help information
-
-    -m, --military
-            Display military (24-hour) time
-
-    -s, --seconds
-            Display seconds
-
-    -w, --width <WIDTH>
-            Font width in characters per tile
-
-            [default: 2]
-
-    -x, --x <X>
-            Horizontal 0-indexed position of top-left corner
-
-            [default: 0]
-
-    -y, --y <Y>
-            Vertical 0-indexed position of top-left corner
-
-            [default: 0]
+Options:
+  -x, --x <X>            Horizontal 0-indexed position of top-left corner [default: 0]
+  -y, --y <Y>            Vertical 0-indexed position of top-left corner [default: 0]
+  -W, --width <WIDTH>    Font width in characters per tile [default: 2]
+  -H, --height <HEIGHT>  Font height in characters per tile [default: 1]
+  -s, --second           Display seconds
+  -m, --military         Display military (24-hour) time
+  -c, --center           Center the clock in the terminal. Overrides manual positioning
+  -C, --color <COLOR>    Change the color of the time [default: 2]
+  -f, --format <FORMAT>  Change the date format [default: "%F | %Z"]
+  -h, --help             Print help (see more with '--help')
 ```
 
 Currently compiles with the `interactive` feature flag set by default, which
