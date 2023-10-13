@@ -1,4 +1,7 @@
-use std::io::{self, Read, Write};
+use std::io;
+use std::io::IsTerminal as _;
+use std::io::Read as _;
+use std::io::Write;
 use std::mem;
 
 use crate::brush;
@@ -23,7 +26,7 @@ impl Term {
     pub fn new() -> io::Result<Self> {
         let termios = unsafe {
             // Ensure that we have a tty device
-            if libc::isatty(libc::STDIN_FILENO) != 1 || libc::isatty(libc::STDOUT_FILENO) != 1 {
+            if !io::stdout().is_terminal() {
                 return Err(io::Error::new(
                     io::ErrorKind::Other,
                     "[USER ERROR]: not a TTY",
@@ -75,10 +78,11 @@ impl Term {
     }
 }
 
-impl io::Write for Term {
+impl Write for Term {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.stdout.write(buf)
     }
+
     fn flush(&mut self) -> io::Result<()> {
         self.stdout.flush()
     }
