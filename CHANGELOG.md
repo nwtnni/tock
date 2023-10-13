@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.0
 
 - Reduce build size on release.
 - Separate CHANGELOG from README.
