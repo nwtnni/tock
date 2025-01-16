@@ -3,7 +3,10 @@ use std::fmt;
 use std::str;
 
 /// Clear the screen.
-pub const CLEAR: &str = "\x1B[2J";
+pub const CLEAR_ALL: &str = "\x1B[2J";
+
+/// Clear single row.
+pub const CLEAR_ROW: &str = "\x1B[2K";
 
 /// Switch to main screen buffer.
 pub const MAIN: &str = "\x1B[?1049l";

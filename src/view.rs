@@ -194,7 +194,7 @@ impl Clock {
         let (date, time) = time::now(self.configuration.second, self.configuration.military);
 
         self.brush.raise();
-        write!(out, "{}{}", self.brush, brush::CLEAR)?;
+        write!(out, "{}{}", self.brush, brush::CLEAR_ALL)?;
 
         // Scan through each row
         for y in 0..font::H {
@@ -233,8 +233,14 @@ impl Clock {
         date.format(&self.configuration.format, &mut self.buffer);
         let date_x = self.configuration.x + self.width() / 2 - self.buffer.len() as u16 / 2;
         let date_y = self.configuration.y + self.height() + 1;
-        let goto = brush::Move(date_x, date_y);
-        write!(out, "{}{}{}", self.brush, goto, self.buffer)
+        write!(
+            out,
+            "{}{}{}{}",
+            self.brush,
+            brush::Move(date_x, date_y),
+            brush::CLEAR_ROW,
+            self.buffer
+        )
     }
 
     /// Write a row (with current color and width) of a font bit into the buffer.
